@@ -1,28 +1,45 @@
 # file-tree-mcp
 
-Two things in one package:
+A file tree for AI coding agents, in two parts:
 
-1. **Universal MCP server** (`mcp.ts`) — works in any MCP client. Tools: `file_tree` (project tree, changed files tagged `[A]/[M]/[D]` with `+N -M`) and `edited_files` (uncommitted changes, from git).
-2. **OpenCode plugin** (below) — the live sidebar tree.
+1. **Universal MCP server** — works in any MCP client. Tools: `file_tree` (project tree, changed files tagged `[A]` `[M]` `[D]` with `+N -M`) and `edited_files` (uncommitted changes, from git).
+2. **OpenCode sidebar plugin** — a live tree that highlights files as the agent edits them ([jump to it](#opencode-sidebar-plugin)).
 
-## Universal MCP setup
+## Install (MCP server)
 
-Needs Node >= 18 and `git`. One command for every client found on your machine: `npx -y github:RandomKid24/adys-mcp install` (backs up each config to `.bak`; safe to re-run). The server ships prebuilt as `mcp.js`; rebuild with `npx esbuild` via `npm run build` after editing `mcp.ts`.
+Needs Node >= 18 and `git`.
 
-Manual config: Project root = the client's cwd, or pass it as the first argument.
-
-```jsonc
-// Claude Code / Cursor / Claude Desktop (mcpServers)
-{ "file-tree": { "command": "node", "args": ["/absolute/path/to/file-tree-mcp/mcp.ts"] } }
+```bash
+npx -y github:RandomKid24/adys-mcp install
 ```
 
-Claude Code: `claude mcp add file-tree -- node /absolute/path/to/file-tree-mcp/mcp.ts`
+Detects Claude Code, Claude Desktop, Cursor, Windsurf, Gemini CLI, OpenCode and Codex, and registers the server in each. Backs up every config it edits to `.bak`, skips configs it can't safely parse, and is safe to re-run. Restart your client afterwards.
 
-Not available over MCP: the sidebar (MCP has no UI), and per-session attribution (git shows all uncommitted changes, not just the agent's).
+### Manual config
+
+The project root is the client's cwd, or the first argument.
+
+```jsonc
+// Claude Desktop / Cursor / Windsurf / Gemini CLI ("mcpServers")
+{ "file-tree": { "command": "npx", "args": ["-y", "github:RandomKid24/adys-mcp"] } }
+```
+
+```bash
+claude mcp add file-tree -- npx -y github:RandomKid24/adys-mcp
+```
+
+### Limits
+
+- No sidebar over MCP (MCP has no UI) — use the OpenCode plugin for that.
+- `edited_files` reports all uncommitted git changes, not only the agent's.
+
+### Development
+
+The server ships prebuilt as `mcp.js` so `npx` needs no build. After editing `mcp.ts` or `src/`, run `npm run build` and commit `mcp.js`.
 
 ---
 
-# opencode-file-tree
+# OpenCode sidebar plugin
 
 A project file tree in the OpenCode sidebar that **highlights the files the agent is editing right now**, plus a `filetree_edited_files` tool so the agent — or another client — can ask what a session changed.
 
@@ -65,7 +82,7 @@ my-project
 ## Install
 
 ```sh
-opencode plugin add opencode-file-tree
+opencode plugin add /absolute/path/to/file-tree-mcp
 ```
 
 Or add it to `opencode.json(c)` yourself:
@@ -73,7 +90,7 @@ Or add it to `opencode.json(c)` yourself:
 ```jsonc
 {
   "$schema": "https://opencode.ai/config.json",
-  "plugins": ["opencode-file-tree"]
+  "plugins": ["/absolute/path/to/file-tree-mcp"]
 }
 ```
 
@@ -85,7 +102,7 @@ configure it in `cli.json` instead:
 
 ```jsonc title="cli.json"
 {
-  "plugins": ["opencode-file-tree"]
+  "plugins": ["/absolute/path/to/file-tree-mcp"]
 }
 ```
 
@@ -110,7 +127,7 @@ Pass options with the object form of a `plugins` entry:
   "$schema": "https://opencode.ai/config.json",
   "plugins": [
     {
-      "package": "opencode-file-tree",
+      "package": "/absolute/path/to/file-tree-mcp",
       "options": {
         "visible": true,
         "onlyEdited": false,
