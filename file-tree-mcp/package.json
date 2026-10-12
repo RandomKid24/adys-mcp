@@ -1,0 +1,67 @@
+{
+  "name": "file-tree-mcp",
+  "version": "0.3.0",
+  "description": "File tree for AI agents: a universal MCP server (any client) plus an OpenCode sidebar plugin.",
+  "type": "module",
+  "license": "MIT",
+  "author": "Ady",
+  "exports": {
+    ".": "./index.ts",
+    "./tui": "./tui.tsx"
+  },
+  "files": [
+    "index.ts",
+    "tui.tsx",
+    "src",
+    "README.md",
+    "LICENSE",
+    "mcp.ts"
+  ],
+  "scripts": {
+    "typecheck": "tsc --noEmit",
+    "smoke": "node --experimental-strip-types scripts/smoke.ts",
+    "mcp": "node mcp.ts"
+  },
+  "keywords": [
+    "opencode",
+    "opencode-plugin",
+    "opentui",
+    "file-tree",
+    "mcp",
+    "model-context-protocol"
+  ],
+  "dependencies": {
+    "@modelcontextprotocol/sdk": "^1.32.1",
+    "@opencode/plugin": ">=2.0.0",
+    "zod": "^4.6.6"
+  },
+  "peerDependencies": {
+    "@opentui/core": ">=0.5.17",
+    "@opentui/solid": ">=0.5.17",
+    "solid-js": ">=1.9.0"
+  },
+  "peerDependenciesMeta": {
+    "@opentui/core": {
+      "optional": true
+    },
+    "@opentui/solid": {
+      "optional": true
+    },
+    "solid-js": {
+      "optional": true
+    }
+  },
+  "devDependencies": {
+    "@opencode/client": "^2.0.27",
+    "@opencode/plugin": "^2.0.27",
+    "@opencode/theme": "^2.0.27",
+    "@opentui/core": "^0.6.1",
+    "@opentui/solid": "^0.6.1",
+    "@types/node": "^24.12.2",
+    "solid-js": "^1.9.17",
+    "typescript": "^5.8.2"
+  },
+  "bin": {
+    "file-tree-mcp": "mcp.ts"
+  }
+}
