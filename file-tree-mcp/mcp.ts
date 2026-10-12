@@ -14,7 +14,12 @@ if (["add", "remove", "list", "catalog"].includes(process.argv[2] ?? "")) {
 }
 
 if (process.argv[2] === "memory") {
-  await (await import("./src/memory/server.ts")).serve()
+  const memory = await import("./src/memory/server.ts")
+  if (process.argv[3] === "status") {
+    console.log(memory.status())
+    process.exit(0)
+  }
+  await memory.serve()
   await new Promise<void>((done) => process.stdin.on("close", done)) // run until the client disconnects
   process.exit(0)
 }

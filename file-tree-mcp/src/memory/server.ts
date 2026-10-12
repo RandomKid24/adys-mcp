@@ -2,13 +2,41 @@
 import { McpServer } from "@modelcontextprotocol/sdk/server/mcp.js"
 import { StdioServerTransport } from "@modelcontextprotocol/sdk/server/stdio.js"
 import { existsSync, statSync, watch } from "node:fs"
-import { join } from "node:path"
+import { homedir } from "node:os"
+import { dirname, join } from "node:path"
 import { z } from "zod"
 import { createIgnore, isIgnored } from "../lib/ignore.ts"
 import { describe, forget, link, neighbors, recordSession, remember, search } from "./core.ts"
-import { headSha, loadGraph, memoryRoot, saveGraph, staleMap } from "./store.ts"
+import { graphPath, headSha, loadGraph, memoryRoot, saveGraph, staleMap } from "./store.ts"
 
 const text = (value: string, isError = false) => ({ content: [{ type: "text" as const, text: value }], ...(isError ? { isError } : {}) })
+
+export const VERSION = "0.2.1"
+
+/** What this server sees: the same text for `memory status` (human) and the `memory_status` tool (AI). */
+export function status(): string {
+  const root = memoryRoot()
+  const file = graphPath(root)
+  const graph = loadGraph(root)
+  let watching = root === homedir() || dirname(root) === root ? "OFF — root is your home/filesystem root, not a project (start your client inside the project or set MEMORY_ROOT)" : "yes"
+  try {
+    watch(root, { recursive: true }).close()
+  } catch (error) {
+    watching = `NO — ${(error as Error).message}`
+  }
+  const sessions = graph.nodes.filter((n) => n.kind === "session")
+  const last = existsSync(file) ? new Date(statSync(file).mtimeMs).toISOString() : "never written"
+  return [
+    `project-memory ${VERSION}`,
+    `working directory : ${process.cwd()}`,
+    `project root used : ${root}${process.env.MEMORY_ROOT ? " (MEMORY_ROOT)" : ""}`,
+    `memory file       : ${file} (${existsSync(file) ? "exists" : "does not exist yet"})`,
+    `last written      : ${last}`,
+    `nodes / edges     : ${graph.nodes.length} / ${graph.edges.length}  (${sessions.length} session, ${graph.nodes.filter((n) => n.kind === "file").length} file, ${graph.nodes.filter((n) => ["decision", "note", "task"].includes(n.kind)).length} decision/note/task)`,
+    `file watcher      : ${watching}`,
+    `git               : ${headSha(root) ? "repo, HEAD " + headSha(root)!.slice(0, 7) : "no git repo here (stale checks off)"}`,
+  ].join("\n")
+}
 
 const INSTRUCTIONS =
   "Project memory. Before re-deriving why something is built a certain way, call `recall`. " +
@@ -61,7 +89,13 @@ function watchChanges(root: string): void {
 
 export async function serve(): Promise<void> {
   const root = memoryRoot()
-  const server = new McpServer({ name: "project-memory", version: "0.2.0" }, { instructions: INSTRUCTIONS })
+  const server = new McpServer({ name: "project-memory", version: VERSION }, { instructions: INSTRUCTIONS })
+
+  server.registerTool(
+    "memory_status",
+    { description: "Report where project memory is stored, how much it holds, and whether automatic file capture is running. Use when memory looks empty.", inputSchema: {} },
+    async () => text(status()),
+  )
 
   server.registerTool(
     "remember",
@@ -171,5 +205,8 @@ export async function serve(): Promise<void> {
   )
 
   await server.connect(new StdioServerTransport())
-  if (existsSync(root)) watchChanges(root)
+  // A client that starts the server in $HOME or / is not inside a project; watching that would be huge and private.
+  const tooBroad = root === homedir() || dirname(root) === root
+  if (existsSync(root) && !tooBroad) watchChanges(root)
+  console.error(`project-memory ${VERSION}: root=${root} (${tooBroad ? "NOT a project folder - file watcher off; set MEMORY_ROOT" : "file watcher on"})`) // stderr only: stdout is the protocol
 }
