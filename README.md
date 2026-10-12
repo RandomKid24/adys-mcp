@@ -28,7 +28,8 @@ README.md         [D]  +0 -202
 **Works everywhere** — Claude Code, Cursor, Claude Desktop, Codex, OpenCode… any MCP client:
 
 ```bash
-claude mcp add file-tree -- npx -y github:RandomKid24/adys-mcp
+git clone https://github.com/RandomKid24/adys-mcp && cd adys-mcp/file-tree-mcp && npm i --legacy-peer-deps
+claude mcp add file-tree -- node "$PWD/mcp.ts"
 ```
 
 **On OpenCode it goes further:** a live sidebar that highlights files as the agent edits them. See the [package README](./file-tree-mcp/README.md).
