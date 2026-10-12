@@ -7214,9 +7214,10 @@ __export(install_exports, {
   install: () => install
 });
 import { execFileSync } from "node:child_process";
-import { copyFileSync, existsSync, mkdirSync, readFileSync, writeFileSync } from "node:fs";
+import { copyFileSync, cpSync, existsSync, mkdirSync, readFileSync, writeFileSync } from "node:fs";
 import { homedir, platform } from "node:os";
 import { dirname, join } from "node:path";
+import { fileURLToPath } from "node:url";
 function patchJson(file2, keyPath, entry) {
   let data = {};
   if (existsSync(file2)) {
@@ -7233,20 +7234,38 @@ function patchJson(file2, keyPath, entry) {
   writeFileSync(file2, JSON.stringify(data, null, 2) + "\n");
   return "installed";
 }
+function installPlugin(dir, configFile) {
+  if (!existsSync(join(PKG_DIR, "tui.tsx"))) return "skipped (plugin sources not in this package)";
+  const target = join(dir, "file-tree-plugin");
+  mkdirSync(target, { recursive: true });
+  for (const item of ["index.ts", "tui.tsx", "src"]) cpSync(join(PKG_DIR, item), join(target, item), { recursive: true });
+  let data;
+  try {
+    data = JSON.parse(readFileSync(configFile, "utf8") || "{}");
+  } catch {
+    return `copied to ${target} \u2014 add it to "plugins" manually`;
+  }
+  const plugins = data.plugins ??= [];
+  if (plugins.includes(target)) return "updated";
+  plugins.push(target);
+  writeFileSync(configFile, JSON.stringify(data, null, 2) + "\n");
+  return "installed";
+}
 function install() {
   const found = clients.filter((c) => existsSync(c.detect));
   if (found.length === 0) console.log("No supported MCP clients detected.");
   for (const c of found) console.log(`${c.name.padEnd(15)} ${c.run()}`);
   if (found.length) console.log("\nRestart your client(s) to load `file-tree`.");
 }
-var NAME, CMD, ARGS, home, stdio, appSupport, clients;
+var NAME, win, CMD, ARGS, home, PKG_DIR, stdio, appSupport, clients;
 var init_install = __esm({
   "src/install.ts"() {
     "use strict";
     NAME = "file-tree";
-    CMD = "npx";
-    ARGS = ["-y", "github:RandomKid24/adys-mcp"];
+    win = platform() === "win32";
+    [CMD, ...ARGS] = [...win ? ["cmd", "/c"] : [], "npx", "-y", "github:RandomKid24/adys-mcp"];
     home = homedir();
+    PKG_DIR = dirname(fileURLToPath(import.meta.url));
     stdio = { command: CMD, args: ARGS };
     appSupport = platform() === "darwin" ? join(home, "Library/Application Support") : platform() === "win32" ? process.env.APPDATA ?? join(home, "AppData/Roaming") : join(home, ".config");
     clients = [
@@ -7255,7 +7274,7 @@ var init_install = __esm({
         detect: join(home, ".claude"),
         run() {
           try {
-            execFileSync("claude", ["mcp", "add", "--scope", "user", NAME, "--", CMD, ...ARGS], { stdio: "pipe" });
+            execFileSync("claude", ["mcp", "add", "--scope", "user", NAME, "--", CMD, ...ARGS], { stdio: "pipe", shell: win });
             return "installed";
           } catch (error62) {
             return /already exists/i.test(String(error62.stderr)) ? "already installed" : "failed (is `claude` on PATH?)";
@@ -7280,7 +7299,7 @@ var init_install = __esm({
         run() {
           const dir = join(home, ".config/opencode");
           const file2 = existsSync(join(dir, "opencode.json")) ? join(dir, "opencode.json") : join(dir, "opencode.jsonc");
-          return patchJson(file2, "mcp", { type: "local", command: [CMD, ...ARGS], enabled: true });
+          return `sidebar plugin ${installPlugin(dir, file2)}`;
         }
       },
       {

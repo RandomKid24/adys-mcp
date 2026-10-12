@@ -13,7 +13,7 @@ Needs Node >= 18 and `git`.
 npx -y github:RandomKid24/adys-mcp install
 ```
 
-Detects Claude Code, Claude Desktop, Cursor, Windsurf, Gemini CLI, OpenCode and Codex, and registers the server in each. Backs up every config it edits to `.bak`, skips configs it can't safely parse, and is safe to re-run. Restart your client afterwards.
+Detects Claude Code, Claude Desktop, Cursor, Windsurf, Gemini CLI, OpenCode and Codex, and registers the server in each (on OpenCode it installs the sidebar plugin instead; on Windows it wraps `npx` in `cmd /c`). Backs up every config it edits to `.bak`, skips configs it can't safely parse, and is safe to re-run. Restart your client afterwards.
 
 ### Manual config
 

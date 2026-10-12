@@ -1,13 +1,16 @@
 // `npx -y github:RandomKid24/adys-mcp install` — registers the server in every MCP client found.
 import { execFileSync } from "node:child_process"
-import { copyFileSync, existsSync, mkdirSync, readFileSync, writeFileSync } from "node:fs"
+import { copyFileSync, cpSync, existsSync, mkdirSync, readFileSync, writeFileSync } from "node:fs"
 import { homedir, platform } from "node:os"
 import { dirname, join } from "node:path"
+import { fileURLToPath } from "node:url"
 
 const NAME = "file-tree"
-const CMD = "npx"
-const ARGS = ["-y", "github:RandomKid24/adys-mcp"]
+const win = platform() === "win32"
+// Windows can't spawn `npx` directly (it's npx.cmd); route through cmd.
+const [CMD, ...ARGS] = [...(win ? ["cmd", "/c"] : []), "npx", "-y", "github:RandomKid24/adys-mcp"]
 const home = homedir()
+const PKG_DIR = dirname(fileURLToPath(import.meta.url))
 
 /** Merge into a JSON config at `keyPath`. Skips (returns a reason) when the file isn't plain JSON. */
 function patchJson(file: string, keyPath: string, entry: unknown): string {
@@ -24,6 +27,25 @@ function patchJson(file: string, keyPath: string, entry: unknown): string {
   if (bucket[NAME]) return "already installed"
   bucket[NAME] = entry
   writeFileSync(file, JSON.stringify(data, null, 2) + "\n")
+  return "installed"
+}
+
+/** Copy the sidebar plugin next to the OpenCode config and list it under `plugins`. */
+function installPlugin(dir: string, configFile: string): string {
+  if (!existsSync(join(PKG_DIR, "tui.tsx"))) return "skipped (plugin sources not in this package)"
+  const target = join(dir, "file-tree-plugin")
+  mkdirSync(target, { recursive: true })
+  for (const item of ["index.ts", "tui.tsx", "src"]) cpSync(join(PKG_DIR, item), join(target, item), { recursive: true })
+  let data: any
+  try {
+    data = JSON.parse(readFileSync(configFile, "utf8") || "{}")
+  } catch {
+    return `copied to ${target} — add it to "plugins" manually`
+  }
+  const plugins: unknown[] = (data.plugins ??= [])
+  if (plugins.includes(target)) return "updated"
+  plugins.push(target)
+  writeFileSync(configFile, JSON.stringify(data, null, 2) + "\n")
   return "installed"
 }
 
@@ -47,7 +69,7 @@ const clients: Client[] = [
     detect: join(home, ".claude"),
     run() {
       try {
-        execFileSync("claude", ["mcp", "add", "--scope", "user", NAME, "--", CMD, ...ARGS], { stdio: "pipe" })
+        execFileSync("claude", ["mcp", "add", "--scope", "user", NAME, "--", CMD, ...ARGS], { stdio: "pipe", shell: win })
         return "installed"
       } catch (error) {
         return /already exists/i.test(String((error as any).stderr)) ? "already installed" : "failed (is `claude` on PATH?)"
@@ -72,7 +94,8 @@ const clients: Client[] = [
     run() {
       const dir = join(home, ".config/opencode")
       const file = existsSync(join(dir, "opencode.json")) ? join(dir, "opencode.json") : join(dir, "opencode.jsonc")
-      return patchJson(file, "mcp", { type: "local", command: [CMD, ...ARGS], enabled: true })
+      // The plugin already provides the sidebar and the edited-files tool, so no MCP entry here.
+      return `sidebar plugin ${installPlugin(dir, file)}`
     },
   },
   {

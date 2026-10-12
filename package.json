@@ -5,5 +5,10 @@
   "license": "MIT",
   "type": "module",
   "bin": "file-tree-mcp/mcp.js",
-  "files": ["file-tree-mcp/mcp.js"]
+  "files": [
+    "file-tree-mcp/mcp.js",
+    "file-tree-mcp/index.ts",
+    "file-tree-mcp/tui.tsx",
+    "file-tree-mcp/src"
+  ]
 }
