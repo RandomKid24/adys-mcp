@@ -30,7 +30,15 @@ claude mcp add file-tree -- npx -y github:RandomKid24/adys-mcp
 
 ### Claude Code: free `/tree` pane
 
-The installer also adds the `file-tree-pane` mod (`../claude-code-mod`). `/tree` opens a pane with the project tree, git changes (`A`/`M`/`D`, `+N -M`) and click-to-fold folders. It renders in the terminal directly — **no model call, no tokens**. It rescans after edits. Manual install: `claude plugin marketplace add RandomKid24/adys-mcp && claude plugin install file-tree-pane@adys-mcp`. **Click a file to edit it**: a line editor opens in a second pane — click a line, change it, press Enter to save that line to disk; `+ line below`, `× delete line` and page buttons are there too. (Claude Code's pane API has no multi-line text box, so it edits one line at a time.)
+The installer also adds the `file-tree-pane` mod (`../claude-code-mod`). Everything below draws in the terminal itself — **no model call, no tokens** (except the one button marked `tokens`).
+
+- `/tree` — project tree with git changes (`A`/`M`/`D`, `+N -M`), folders fold on click, dotfiles toggle, `+ file` to create one, a `find` box, and a `◀ editing` marker that follows the file the agent just touched.
+- **Click a file** — viewer with syntax highlighting. Buttons: `edit`, `diff` (what changed vs `HEAD`) and `revert`, `open in editor` (`code`, else `open`/`xdg-open`), `rename`, `delete` (both ask to confirm), and `→ Claude (tokens)` which sends "read this file".
+- **Edit** — a line editor (Claude Code's pane API has no multi-line text box): click a line, change it, Enter saves it to disk; `+ line below`, `× delete line`, paging.
+- `/find <text>` (or the `find` box) — search file contents (`git grep`, else `grep`); click a hit to open the editor on that line.
+- **Keyboard:** focus the pane (click it, or ctrl+x then Tab), then Tab/arrows move between buttons and Enter presses.
+
+Manual install: `claude plugin marketplace add RandomKid24/adys-mcp && claude plugin install file-tree-pane@adys-mcp`. rename/delete/revert use `mv`, `rm` and `git`, so they are macOS/Linux only.
 
 ### Uninstall
 
