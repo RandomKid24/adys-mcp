@@ -155,16 +155,12 @@ export const register: Register = on => {
           }
           const change = found[entry.path]
           if (!change) return <Text key={entry.path}>{pad}  {entry.name}</Text>
-          const stats = change.additions === undefined ? null : (
-            <>
-              <Text color="green"> +{change.additions}</Text>
-              <Text color="red"> -{change.deletions}</Text>
-            </>
-          )
+          const hasCounts = change.additions !== undefined
           return (
             <Text key={entry.path} color={color(change.status)}>
               {pad}{change.status} {entry.name}
-              {stats}
+              {hasCounts ? <Text color="green"> +{change.additions}</Text> : null}
+              {hasCounts ? <Text color="red"> -{change.deletions}</Text> : null}
             </Text>
           )
         })}
