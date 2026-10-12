@@ -91,7 +91,19 @@ function Editor(props: { path: string; location: LocationRef; onSaved: () => voi
             <span style={{ fg: theme.text.feedback.success.base }}>{`  ✓ ${status()}`}</span>
           </Show>
         </text>
-        <text wrapMode="none" fg={theme.text.muted}>{"ctrl+s save · esc close"}</text>
+        <box flexDirection="row" gap={2}>
+          <box
+            backgroundColor={theme.background.action.primary.base}
+            paddingLeft={1}
+            paddingRight={1}
+            onMouseUp={(event) => {
+              if (event.button === 0) void save()
+            }}
+          >
+            <text wrapMode="none" fg={theme.text.action.primary.base}>{"Save"}</text>
+          </box>
+          <text wrapMode="none" fg={theme.text.muted}>{"ctrl/alt+s · ctrl+enter · esc close"}</text>
+        </box>
       </box>
 
       <Show when={file()} fallback={<text fg={theme.text.muted}>Loading…</text>}>
@@ -109,7 +121,13 @@ function Editor(props: { path: string; location: LocationRef; onSaved: () => voi
               textColor={theme.text.base}
               backgroundColor={theme.background.base}
               focusedBackgroundColor={theme.background.raised.base}
-              keyBindings={[{ name: "s", ctrl: true, action: "submit" }]}
+              // ctrl+s can be claimed by the host or the terminal, so offer alternatives too
+              // (alt/cmd+enter is already bound by default).
+              keyBindings={[
+                { name: "s", ctrl: true, action: "submit" },
+                { name: "s", meta: true, action: "submit" },
+                { name: "return", ctrl: true, action: "submit" },
+              ]}
               onSubmit={() => void save()}
               onContentChange={() => {
                 if (!area) return

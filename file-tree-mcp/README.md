@@ -80,7 +80,7 @@ my-project
 - **Deleted files** stay visible as red ghost rows (tracked from the workspace
   file watcher).
 - Edited-only mode when you only care about the diff surface.
-- **Click a file to open it in an editor dialog** — edit, `ctrl+s` to save, `esc` to close (text files up to 512 KB; saves through the OpenCode `file.write` API).
+- **Click a file to open it in an editor dialog** — edit, `ctrl+s` (or `alt+s`, `ctrl+enter`, or the Save button) to save, `esc` to close (text files up to 512 KB; saves through the OpenCode `file.write` API).
 - Closing the editor with unsaved changes asks **Discard / Keep editing** (Keep reopens your draft).
 - Git changes for **every** file (not just the agent's) are highlighted via `vcs.status`; turn off with `gitStatus: false`.
 - Source files are tinted by extension from the theme's syntax colors.
