@@ -1,15 +1,67 @@
 // project-memory MCP server: a shared, git-aware memory graph for any MCP client.
 import { McpServer } from "@modelcontextprotocol/sdk/server/mcp.js"
 import { StdioServerTransport } from "@modelcontextprotocol/sdk/server/stdio.js"
+import { existsSync, statSync, watch } from "node:fs"
+import { join } from "node:path"
 import { z } from "zod"
+import { createIgnore, isIgnored } from "../lib/ignore.ts"
 import { describe, forget, link, neighbors, recordSession, remember, search } from "./core.ts"
 import { headSha, loadGraph, memoryRoot, saveGraph, staleMap } from "./store.ts"
 
 const text = (value: string, isError = false) => ({ content: [{ type: "text" as const, text: value }], ...(isError ? { isError } : {}) })
 
+const INSTRUCTIONS =
+  "Project memory. Before re-deriving why something is built a certain way, call `recall`. " +
+  "When a real decision is made (a choice between options, a constraint discovered), call `remember` with the WHY. " +
+  "At the end of a substantial piece of work, call `log_session` with a one-line summary. " +
+  "Files changed while this server runs are already recorded automatically on today's session node."
+
+/**
+ * Records files that change under `root` while the server runs onto today's session
+ * node, so memory fills itself in every client with no hook and no model call.
+ */
+function watchChanges(root: string): void {
+  const ignore = createIgnore([".memory"])
+  const pending = new Set<string>()
+  let timer: ReturnType<typeof setTimeout> | undefined
+
+  const flush = (): void => {
+    timer = undefined
+    const files = [...pending].slice(0, 200).filter((rel) => {
+      try {
+        return statSync(join(root, rel)).isFile() // skips deletions and directories
+      } catch {
+        return false
+      }
+    })
+    pending.clear()
+    if (files.length === 0) return
+    try {
+      const graph = loadGraph(root)
+      const now = Date.now()
+      recordSession(graph, new Date(now).toISOString().slice(0, 10), files, now, undefined, headSha(root))
+      saveGraph(root, graph)
+    } catch {
+      // memory capture must never take the server down
+    }
+  }
+
+  try {
+    watch(root, { recursive: true }, (_event, name) => {
+      if (!name) return
+      const rel = String(name).replace(/\\/g, "/")
+      if (isIgnored(rel, ignore) || rel.split("/").pop()!.startsWith(".env")) return
+      pending.add(rel)
+      timer ??= setTimeout(flush, 3000)
+    }).on("error", () => {})
+  } catch {
+    // recursive watching unsupported here: the explicit tools still work
+  }
+}
+
 export async function serve(): Promise<void> {
   const root = memoryRoot()
-  const server = new McpServer({ name: "project-memory", version: "0.1.0" })
+  const server = new McpServer({ name: "project-memory", version: "0.2.0" }, { instructions: INSTRUCTIONS })
 
   server.registerTool(
     "remember",
@@ -119,4 +171,5 @@ export async function serve(): Promise<void> {
   )
 
   await server.connect(new StdioServerTransport())
+  if (existsSync(root)) watchChanges(root)
 }

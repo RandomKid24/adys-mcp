@@ -38379,9 +38379,46 @@ var server_exports = {};
 __export(server_exports, {
   serve: () => serve
 });
+import { existsSync as existsSync4, statSync, watch } from "node:fs";
+import { join as join4 } from "node:path";
+function watchChanges(root2) {
+  const ignore = createIgnore([".memory"]);
+  const pending = /* @__PURE__ */ new Set();
+  let timer;
+  const flush = () => {
+    timer = void 0;
+    const files = [...pending].slice(0, 200).filter((rel) => {
+      try {
+        return statSync(join4(root2, rel)).isFile();
+      } catch {
+        return false;
+      }
+    });
+    pending.clear();
+    if (files.length === 0) return;
+    try {
+      const graph = loadGraph(root2);
+      const now = Date.now();
+      recordSession(graph, new Date(now).toISOString().slice(0, 10), files, now, void 0, headSha(root2));
+      saveGraph(root2, graph);
+    } catch {
+    }
+  };
+  try {
+    watch(root2, { recursive: true }, (_event, name) => {
+      if (!name) return;
+      const rel = String(name).replace(/\\/g, "/");
+      if (isIgnored(rel, ignore) || rel.split("/").pop().startsWith(".env")) return;
+      pending.add(rel);
+      timer ??= setTimeout(flush, 3e3);
+    }).on("error", () => {
+    });
+  } catch {
+  }
+}
 async function serve() {
   const root2 = memoryRoot();
-  const server2 = new McpServer({ name: "project-memory", version: "0.1.0" });
+  const server2 = new McpServer({ name: "project-memory", version: "0.2.0" }, { instructions: INSTRUCTIONS });
   server2.registerTool(
     "remember",
     {
@@ -38480,17 +38517,20 @@ async function serve() {
     }
   );
   await server2.connect(new StdioServerTransport());
+  if (existsSync4(root2)) watchChanges(root2);
 }
-var text;
+var text, INSTRUCTIONS;
 var init_server3 = __esm({
   "src/memory/server.ts"() {
     "use strict";
     init_mcp();
     init_stdio2();
     init_zod();
+    init_ignore();
     init_core3();
     init_store();
     text = (value, isError = false) => ({ content: [{ type: "text", text: value }], ...isError ? { isError } : {} });
+    INSTRUCTIONS = "Project memory. Before re-deriving why something is built a certain way, call `recall`. When a real decision is made (a choice between options, a constraint discovered), call `remember` with the WHY. At the end of a substantial piece of work, call `log_session` with a one-line summary. Files changed while this server runs are already recorded automatically on today's session node.";
   }
 });
 
@@ -38546,9 +38586,9 @@ var init_semver = __esm({
 
 // src/doctor/checks.ts
 import { execFile } from "node:child_process";
-import { existsSync as existsSync4, readdirSync, readFileSync as readFileSync4, statSync } from "node:fs";
+import { existsSync as existsSync5, readdirSync, readFileSync as readFileSync4, statSync as statSync2 } from "node:fs";
 import { createServer } from "node:net";
-import { join as join4 } from "node:path";
+import { join as join5 } from "node:path";
 import { promisify } from "node:util";
 async function out(cmd, args, timeout = 4e3) {
   try {
@@ -38560,7 +38600,7 @@ async function out(cmd, args, timeout = 4e3) {
 }
 function requirements(root2) {
   const reqs = [];
-  const pkg = read(join4(root2, "package.json"));
+  const pkg = read(join5(root2, "package.json"));
   if (pkg) {
     try {
       const engines = JSON.parse(pkg).engines ?? {};
@@ -38568,15 +38608,15 @@ function requirements(root2) {
     } catch {
     }
   }
-  const nvm = (read(join4(root2, ".nvmrc")) ?? read(join4(root2, ".node-version")))?.trim();
+  const nvm = (read(join5(root2, ".nvmrc")) ?? read(join5(root2, ".node-version")))?.trim();
   if (nvm && !reqs.some((r) => r.tool === "node") && /\d/.test(nvm)) reqs.push({ tool: "node", range: nvm.replace(/^v/, ""), source: ".nvmrc" });
-  const py = (read(join4(root2, ".python-version")) ?? "").trim();
+  const py = (read(join5(root2, ".python-version")) ?? "").trim();
   if (py) reqs.push({ tool: "python", range: py, source: ".python-version" });
-  const pyproject = read(join4(root2, "pyproject.toml"))?.match(/requires-python\s*=\s*"([^"]+)"/);
+  const pyproject = read(join5(root2, "pyproject.toml"))?.match(/requires-python\s*=\s*"([^"]+)"/);
   if (pyproject) reqs.push({ tool: "python", range: pyproject[1], source: "pyproject.toml" });
-  const gomod = read(join4(root2, "go.mod"))?.match(/^go\s+(\d+(?:\.\d+)*)/m);
+  const gomod = read(join5(root2, "go.mod"))?.match(/^go\s+(\d+(?:\.\d+)*)/m);
   if (gomod) reqs.push({ tool: "go", range: `>=${gomod[1]}`, source: "go.mod" });
-  const rust = read(join4(root2, "Cargo.toml"))?.match(/rust-version\s*=\s*"([^"]+)"/);
+  const rust = read(join5(root2, "Cargo.toml"))?.match(/rust-version\s*=\s*"([^"]+)"/);
   if (rust) reqs.push({ tool: "rust", range: `>=${rust[1]}`, source: "Cargo.toml" });
   return reqs;
 }
@@ -38584,10 +38624,10 @@ async function checkTools(root2) {
   const findings = [];
   const reqs = requirements(root2);
   const need = new Set(reqs.map((r) => r.tool));
-  if (existsSync4(join4(root2, "Dockerfile")) || existsSync4(join4(root2, "docker-compose.yml")) || existsSync4(join4(root2, "compose.yaml"))) need.add("docker");
-  const lock = ["pnpm-lock.yaml", "yarn.lock", "package-lock.json"].find((f) => existsSync4(join4(root2, f)));
+  if (existsSync5(join5(root2, "Dockerfile")) || existsSync5(join5(root2, "docker-compose.yml")) || existsSync5(join5(root2, "compose.yaml"))) need.add("docker");
+  const lock = ["pnpm-lock.yaml", "yarn.lock", "package-lock.json"].find((f) => existsSync5(join5(root2, f)));
   if (lock) need.add(lock === "pnpm-lock.yaml" ? "pnpm" : lock === "yarn.lock" ? "yarn" : "npm");
-  if (existsSync4(join4(root2, ".git"))) need.add("git");
+  if (existsSync5(join5(root2, ".git"))) need.add("git");
   for (const tool of need) {
     const probe = PROBES[tool];
     if (!probe) continue;
@@ -38614,7 +38654,7 @@ async function checkTools(root2) {
   }
   const pm = (() => {
     try {
-      return JSON.parse(read(join4(root2, "package.json")) ?? "{}").packageManager;
+      return JSON.parse(read(join5(root2, "package.json")) ?? "{}").packageManager;
     } catch {
       return void 0;
     }
@@ -38628,7 +38668,7 @@ async function checkTools(root2) {
   return findings;
 }
 function checkDeps(root2) {
-  const pkgText = read(join4(root2, "package.json"));
+  const pkgText = read(join5(root2, "package.json"));
   if (!pkgText) return [];
   let pkg;
   try {
@@ -38638,14 +38678,14 @@ function checkDeps(root2) {
   }
   const names = Object.keys({ ...pkg.dependencies, ...pkg.devDependencies });
   if (names.length === 0) return [];
-  const modules = join4(root2, "node_modules");
-  if (!existsSync4(modules)) return [{ level: "fail", title: "node_modules is missing", fix: "Run your package manager's install." }];
-  const missing = names.filter((n) => !existsSync4(join4(modules, n)));
+  const modules = join5(root2, "node_modules");
+  if (!existsSync5(modules)) return [{ level: "fail", title: "node_modules is missing", fix: "Run your package manager's install." }];
+  const missing = names.filter((n) => !existsSync5(join5(modules, n)));
   if (missing.length) {
     return [{ level: "fail", title: `${missing.length} dependenc${missing.length === 1 ? "y is" : "ies are"} not installed`, detail: missing.slice(0, 8).join(", "), fix: "Run your package manager's install." }];
   }
-  const lock = ["pnpm-lock.yaml", "yarn.lock", "package-lock.json"].map((f) => join4(root2, f)).find(existsSync4);
-  if (lock && statSync(lock).mtimeMs > statSync(modules).mtimeMs + 1e3) {
+  const lock = ["pnpm-lock.yaml", "yarn.lock", "package-lock.json"].map((f) => join5(root2, f)).find(existsSync5);
+  if (lock && statSync2(lock).mtimeMs > statSync2(modules).mtimeMs + 1e3) {
     return [{ level: "warn", title: "lockfile is newer than node_modules", detail: "dependencies may be out of date", fix: "Re-run install." }];
   }
   return [{ level: "ok", title: `${names.length} dependencies installed` }];
@@ -38654,12 +38694,12 @@ function projectPorts(root2) {
   const found = /* @__PURE__ */ new Set();
   const add = (n) => Number.isInteger(n) && n > 0 && n < 65536 && found.add(n);
   for (const file2 of [".env", ".env.example", ".env.local"]) {
-    for (const m of read(join4(root2, file2))?.matchAll(/^\s*(?:\w*PORT)\s*=\s*(\d+)/gim) ?? []) add(Number(m[1]));
+    for (const m of read(join5(root2, file2))?.matchAll(/^\s*(?:\w*PORT)\s*=\s*(\d+)/gim) ?? []) add(Number(m[1]));
   }
   for (const file2 of ["docker-compose.yml", "docker-compose.yaml", "compose.yaml", "compose.yml"]) {
-    for (const m of read(join4(root2, file2))?.matchAll(/["']?(\d{2,5}):\d{2,5}["']?/g) ?? []) add(Number(m[1]));
+    for (const m of read(join5(root2, file2))?.matchAll(/["']?(\d{2,5}):\d{2,5}["']?/g) ?? []) add(Number(m[1]));
   }
-  for (const m of read(join4(root2, "package.json"))?.matchAll(/(?:--port|-p|PORT=)\s*=?\s*(\d{2,5})/g) ?? []) add(Number(m[1]));
+  for (const m of read(join5(root2, "package.json"))?.matchAll(/(?:--port|-p|PORT=)\s*=?\s*(\d{2,5})/g) ?? []) add(Number(m[1]));
   return found.size ? [...found] : COMMON_PORTS;
 }
 function inUse(port) {
@@ -38712,7 +38752,7 @@ function usedVars(root2) {
   const walk = (rel) => {
     let entries;
     try {
-      entries = readdirSync(join4(root2, rel), { withFileTypes: true });
+      entries = readdirSync(join5(root2, rel), { withFileTypes: true });
     } catch {
       return;
     }
@@ -38723,9 +38763,9 @@ function usedVars(root2) {
       if (entry.isDirectory()) walk(path);
       else if (CODE_EXT.test(entry.name)) {
         files += 1;
-        const full = join4(root2, path);
+        const full = join5(root2, path);
         try {
-          if (statSync(full).size > 2e5) continue;
+          if (statSync2(full).size > 2e5) continue;
         } catch {
           continue;
         }
@@ -38741,8 +38781,8 @@ function usedVars(root2) {
 }
 function checkEnv(root2) {
   const findings = [];
-  const env = dotenvNames(join4(root2, ".env"));
-  const example = dotenvNames(join4(root2, ".env.example")) ?? dotenvNames(join4(root2, ".env.sample"));
+  const env = dotenvNames(join5(root2, ".env"));
+  const example = dotenvNames(join5(root2, ".env.example")) ?? dotenvNames(join5(root2, ".env.sample"));
   if (example && !env) {
     findings.push({ level: "fail", title: ".env is missing", detail: `.env.example lists ${example.size} variables`, fix: "Copy .env.example to .env and fill in the values." });
   } else if (example && env) {
@@ -38752,7 +38792,7 @@ function checkEnv(root2) {
     }
   }
   const defined = /* @__PURE__ */ new Set([...env ?? [], ...example ?? [], ...Object.keys(process.env)]);
-  for (const file2 of [".env.local", ".env.development"]) for (const n of dotenvNames(join4(root2, file2)) ?? []) defined.add(n);
+  for (const file2 of [".env.local", ".env.development"]) for (const n of dotenvNames(join5(root2, file2)) ?? []) defined.add(n);
   const unset = [...usedVars(root2)].filter(([name]) => !defined.has(name) && !IGNORED_VARS.has(name));
   if (unset.length) {
     findings.push({
@@ -38766,7 +38806,7 @@ function checkEnv(root2) {
   return findings;
 }
 async function checkDocker(root2) {
-  const uses = ["Dockerfile", "docker-compose.yml", "docker-compose.yaml", "compose.yaml", "compose.yml"].some((f) => existsSync4(join4(root2, f)));
+  const uses = ["Dockerfile", "docker-compose.yml", "docker-compose.yaml", "compose.yaml", "compose.yml"].some((f) => existsSync5(join5(root2, f)));
   if (!uses) return [];
   const info = await out("docker", ["info", "--format", "{{.ServerVersion}}"], 6e3);
   if (info === void 0) return [];
@@ -39026,7 +39066,7 @@ init_stdio2();
 init_zod();
 init_ignore();
 import { execFileSync as execFileSync4 } from "node:child_process";
-import { readdirSync as readdirSync2, readFileSync as readFileSync5, statSync as statSync2 } from "node:fs";
+import { readdirSync as readdirSync2, readFileSync as readFileSync5, statSync as statSync3 } from "node:fs";
 import { relative, resolve as resolve3 } from "node:path";
 if (["add", "remove", "list", "catalog"].includes(process.argv[2] ?? "")) {
   process.exit((await Promise.resolve().then(() => (init_mcpctl(), mcpctl_exports))).mcpctl(process.argv.slice(2)));
@@ -39205,7 +39245,7 @@ server.registerTool(
   async ({ path, startLine, endLine }) => {
     try {
       const full = inRoot(path);
-      if (statSync2(full).size > 200 * 1024) throw new Error("File is larger than 200 KB; use a smaller file.");
+      if (statSync3(full).size > 200 * 1024) throw new Error("File is larger than 200 KB; use a smaller file.");
       const text3 = readFileSync5(full, "utf8");
       if (text3.includes("\0")) throw new Error("Binary file.");
       const out2 = startLine || endLine ? text3.split("\n").slice((startLine ?? 1) - 1, endLine).join("\n") : text3;

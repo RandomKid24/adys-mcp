@@ -52,7 +52,7 @@ A shared, git-aware memory graph for your project. Decisions (with the **why** a
 | `stale_memories` | Memories whose files changed in git since — likely outdated. |
 | `link_memories` / `forget` | Connect or delete memories. |
 
-- **Sessions fill in automatically** in Claude Code (via the `/tree` mod) and OpenCode (via the sidebar plugin): files touched are recorded on a per-day session node. Other clients save through the tools.
+- **Sessions fill in automatically in every client:** while the server runs, files that change in your project are recorded on a per-day session node (no hook, no model call; `node_modules`, `.git` and `.env*` are skipped). The server also tells the AI when to call `remember` (decisions with the why) and `log_session`. Claude Code (`/tree` mod) and OpenCode (sidebar plugin) add their own capture on top.
 - **See it:** `npx -y github:RandomKid24/adys-mcp graph` opens a local web graph — drag nodes, filter, time-travel slider, orange ring = possibly outdated. Costs no tokens.
 - Installed by the same one command above (`install` registers both servers).
 
