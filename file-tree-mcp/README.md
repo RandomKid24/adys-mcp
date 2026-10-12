@@ -5,7 +5,10 @@ A file tree for AI coding agents, in two parts:
 1. **Universal MCP server** — works in any MCP client. Tools: `file_tree` (project tree, changed files tagged `[A]` `[M]` `[D]` with `+N -M`), `edited_files` (uncommitted changes, from git), `search_files` (find files by path) and `read_file` (text files in the project, optional line range; paths outside the root are refused).
 2. **OpenCode sidebar plugin** — a live tree that highlights files as the agent edits them ([jump to it](#opencode-sidebar-plugin)).
 
-## Also in this package: project-memory and env-doctor
+## Also in this package: project-memory, env-doctor and the generic installer
+
+`add` / `remove` / `list` / `catalog` (`src/mcpctl.ts`, check: `node src/mcpctl.test.ts`) add any MCP server to every client — see the [root README](../README.md).
+
 
 `env-doctor` is a third server (`... doctor`, `doctor --report` for humans; check: `node src/doctor/semver.test.ts`). `project-memory` is a second MCP server (`npx -y github:RandomKid24/adys-mcp memory`, registered by `install`) and a graph viewer (`... graph [port]`). See the [root README](../README.md). Unit check: `node src/memory/core.test.ts`.
 

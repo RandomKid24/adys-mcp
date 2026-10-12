@@ -5304,18 +5304,18 @@ var init_parse = __esm({
       return result.issues.length === 0;
     };
     _encode = (_Err) => {
-      const parse3 = _parse(_Err);
+      const parse4 = _parse(_Err);
       const fn = (schema, value, _ctx, _params) => {
         const ctx = _ctx ? { ..._ctx, direction: "backward" } : { direction: "backward" };
-        return parse3(schema, value, ctx, finalizeParams(fn, _params));
+        return parse4(schema, value, ctx, finalizeParams(fn, _params));
       };
       return fn;
     };
     encode = /* @__PURE__ */ _encode($ZodRealError);
     _decode = (_Err) => {
-      const parse3 = _parse(_Err);
+      const parse4 = _parse(_Err);
       const fn = (schema, value, _ctx, _params) => {
-        return parse3(schema, value, _ctx, finalizeParams(fn, _params));
+        return parse4(schema, value, _ctx, finalizeParams(fn, _params));
       };
       return fn;
     };
@@ -6240,7 +6240,7 @@ function capSize(inst, size) {
   if (!caps.length)
     return;
   const cap = Math.min(...caps.map((c) => c[0]));
-  const parse3 = inst._zod.parse;
+  const parse4 = inst._zod.parse;
   inst._zod.parse = (payload, ctx) => {
     const n = size(payload.value);
     if (n > cap && !ctx?.skipChecks && ctx?.direction !== "backward") {
@@ -6254,7 +6254,7 @@ function capSize(inst, size) {
         }
       }
     }
-    return parse3(payload, ctx);
+    return parse4(payload, ctx);
   };
 }
 function handleArrayResult(result, final, index) {
@@ -8540,7 +8540,7 @@ function isRef(value) {
 function cloneIssues(issues) {
   return issues.map((iss) => iss.path ? { ...iss, path: iss.path.slice() } : { ...iss });
 }
-function isRecursive(inst, stack, resolve3) {
+function isRecursive(inst, stack, resolve4) {
   const cached2 = recursive.get(inst);
   if (cached2 !== void 0)
     return cached2 ? PROVEN : NONE;
@@ -8550,7 +8550,7 @@ function isRecursive(inst, stack, resolve3) {
   let result = NONE;
   const check2 = (child) => {
     if (result !== PROVEN && child?._zod) {
-      const answer = isRecursive(child, stack, resolve3);
+      const answer = isRecursive(child, stack, resolve4);
       if (answer > result)
         result = answer;
     }
@@ -8561,7 +8561,7 @@ function isRecursive(inst, stack, resolve3) {
       const desc = Object.getOwnPropertyDescriptor(sh, key);
       if (spread && !desc.enumerable)
         continue;
-      const child = desc.get ? ASSUMED : desc.value?._zod ? isRecursive(desc.value, stack, resolve3) : NONE;
+      const child = desc.get ? ASSUMED : desc.value?._zod ? isRecursive(desc.value, stack, resolve4) : NONE;
       if (child > answer)
         answer = child;
     }
@@ -8625,7 +8625,7 @@ function isRecursive(inst, stack, resolve3) {
       break;
     // `$ZodLazy` caches its inner on the def, so a resolved edge is followed exactly
     case "lazy": {
-      const inner = def._cachedInner ?? (resolve3 ? inst._zod.innerType : void 0);
+      const inner = def._cachedInner ?? (resolve4 ? inst._zod.innerType : void 0);
       merge2(inner ? isRecursive(inner, stack, false) : ASSUMED);
       break;
     }
@@ -28418,7 +28418,7 @@ var init_protocol = __esm({
               return;
             }
             const pollInterval = task2.pollInterval ?? this._options?.defaultTaskPollInterval ?? 1e3;
-            await new Promise((resolve3) => setTimeout(resolve3, pollInterval));
+            await new Promise((resolve4) => setTimeout(resolve4, pollInterval));
             options?.signal?.throwIfAborted();
           }
         } catch (error62) {
@@ -28435,7 +28435,7 @@ var init_protocol = __esm({
        */
       request(request, resultSchema, options) {
         const { relatedRequestId, resumptionToken, onresumptiontoken, task, relatedTask } = options ?? {};
-        return new Promise((resolve3, reject) => {
+        return new Promise((resolve4, reject) => {
           const earlyReject = (error62) => {
             reject(error62);
           };
@@ -28513,7 +28513,7 @@ var init_protocol = __esm({
               if (!parseResult.success) {
                 reject(parseResult.error);
               } else {
-                resolve3(parseResult.data);
+                resolve4(parseResult.data);
               }
             } catch (error62) {
               reject(error62);
@@ -28775,12 +28775,12 @@ var init_protocol = __esm({
           }
         } catch {
         }
-        return new Promise((resolve3, reject) => {
+        return new Promise((resolve4, reject) => {
           if (signal.aborted) {
             reject(new McpError(ErrorCode.InvalidRequest, "Request cancelled"));
             return;
           }
-          const timeoutId = setTimeout(resolve3, interval);
+          const timeoutId = setTimeout(resolve4, interval);
           signal.addEventListener("abort", () => {
             clearTimeout(timeoutId);
             reject(new McpError(ErrorCode.InvalidRequest, "Request cancelled"));
@@ -31807,7 +31807,7 @@ var require_compile = __commonJS({
       const schOrFunc = root2.refs[ref];
       if (schOrFunc)
         return schOrFunc;
-      let _sch = resolve3.call(this, root2, ref);
+      let _sch = resolve4.call(this, root2, ref);
       if (_sch === void 0) {
         const schema = (_a3 = root2.localRefs) === null || _a3 === void 0 ? void 0 : _a3[ref];
         const { schemaId } = this.opts;
@@ -31834,7 +31834,7 @@ var require_compile = __commonJS({
     function sameSchemaEnv(s1, s2) {
       return s1.schema === s2.schema && s1.root === s2.root && s1.baseId === s2.baseId;
     }
-    function resolve3(root2, ref) {
+    function resolve4(root2, ref) {
       let sch;
       while (typeof (sch = this.refs[ref]) == "string")
         ref = sch;
@@ -32660,11 +32660,11 @@ var require_fast_uri = __commonJS({
         normalizeString(uri, options);
       } else if (typeof uri === "object") {
         uri = /** @type {T} */
-        parse3(serialize(uri, options), options);
+        parse4(serialize(uri, options), options);
       }
       return uri;
     }
-    function resolve3(baseURI, relativeURI, options) {
+    function resolve4(baseURI, relativeURI, options) {
       const schemelessOptions = options ? Object.assign({ scheme: "null" }, options) : { scheme: "null" };
       const {
         parsed: baseParsed,
@@ -32700,8 +32700,8 @@ var require_fast_uri = __commonJS({
     function resolveComponent(base, relative2, options, skipNormalization) {
       const target = {};
       if (!skipNormalization) {
-        base = parse3(serialize(base, options), options);
-        relative2 = parse3(serialize(relative2, options), options);
+        base = parse4(serialize(base, options), options);
+        relative2 = parse4(serialize(relative2, options), options);
       }
       options = options || {};
       if (!options.tolerant && relative2.scheme) {
@@ -33000,7 +33000,7 @@ var require_fast_uri = __commonJS({
       }
       return { parsed, malformedAuthorityOrPort, malformedPercentEncoding, malformedSchemeSpecific, malformedHost, malformedScheme };
     }
-    function parse3(uri, opts) {
+    function parse4(uri, opts) {
       return parseWithStatus(uri, opts).parsed;
     }
     function normalizeString(uri, opts) {
@@ -33033,11 +33033,11 @@ var require_fast_uri = __commonJS({
     var fastUri = {
       SCHEMES,
       normalize,
-      resolve: resolve3,
+      resolve: resolve4,
       resolveComponent,
       equal,
       serialize,
-      parse: parse3
+      parse: parse4
     };
     module.exports = fastUri;
     module.exports.default = fastUri;
@@ -37191,7 +37191,7 @@ var init_mcp = __esm({
         let task = createTaskResult.task;
         const pollInterval = task.pollInterval ?? 5e3;
         while (task.status !== "completed" && task.status !== "failed" && task.status !== "cancelled") {
-          await new Promise((resolve3) => setTimeout(resolve3, pollInterval));
+          await new Promise((resolve4) => setTimeout(resolve4, pollInterval));
           const updatedTask = await extra.taskStore.getTask(taskId);
           if (!updatedTask) {
             throw new McpError(ErrorCode.InternalError, `Task ${taskId} not found during polling`);
@@ -37800,12 +37800,12 @@ var init_stdio2 = __esm({
         this.onclose?.();
       }
       send(message) {
-        return new Promise((resolve3) => {
+        return new Promise((resolve4) => {
           const json2 = serializeMessage(message);
           if (this._stdout.write(json2)) {
-            resolve3();
+            resolve4();
           } else {
-            this._stdout.once("drain", resolve3);
+            this._stdout.once("drain", resolve4);
           }
         });
       }
@@ -37870,6 +37870,365 @@ var init_ignore = __esm({
       ".pnpm-store",
       ".yarn"
     ];
+  }
+});
+
+// src/clients.ts
+import { execFileSync } from "node:child_process";
+import { copyFileSync, existsSync, mkdirSync, readFileSync, writeFileSync } from "node:fs";
+import { homedir, platform } from "node:os";
+import { dirname, join } from "node:path";
+function launch(server2) {
+  if (win && ["npx", "npm", "pnpm", "yarn", "uvx"].includes(server2.command)) return { command: "cmd", args: ["/c", server2.command, ...server2.args] };
+  return { command: server2.command, args: server2.args };
+}
+function readJson(file2) {
+  if (!existsSync(file2)) return {};
+  try {
+    return JSON.parse(readFileSync(file2, "utf8") || "{}");
+  } catch {
+    return "invalid";
+  }
+}
+function patchJson(file2, key, name, entry) {
+  const data = readJson(file2);
+  if (data === "invalid") return INVALID3;
+  const bucket = data[key] ??= {};
+  const remove = entry === void 0;
+  if (remove ? !(name in bucket) : name in bucket) return remove ? "not installed" : "already installed";
+  if (!existsSync(file2)) mkdirSync(dirname(file2), { recursive: true });
+  backup(file2);
+  if (remove) delete bucket[name];
+  else bucket[name] = entry;
+  writeFileSync(file2, JSON.stringify(data, null, 2) + "\n");
+  return remove ? "removed" : "installed";
+}
+function jsonClient(id, name, detect, file2, key = "mcpServers", shape) {
+  const entry = (s) => {
+    if (shape) return shape(s);
+    const { command, args } = launch(s);
+    return { command, args, ...s.env ? { env: s.env } : {} };
+  };
+  return {
+    id,
+    name,
+    detect,
+    add: (s) => patchJson(file2, key, s.name, entry(s)),
+    remove: (n) => patchJson(file2, key, n, void 0),
+    list() {
+      const data = readJson(file2);
+      return data === "invalid" ? void 0 : Object.keys(data[key] ?? {});
+    }
+  };
+}
+function claude(...args) {
+  try {
+    return { ok: true, out: execFileSync("claude", args, { encoding: "utf8", stdio: ["ignore", "pipe", "pipe"], shell: win }) };
+  } catch (error62) {
+    return { ok: false, out: String(error62.stderr || error62.message) };
+  }
+}
+var win, home, validName, appSupport, backup, INVALID3, claudeCode, codexFile, escapeRe, codex, opencodeDir, opencodeFile, opencode, clients, detected;
+var init_clients = __esm({
+  "src/clients.ts"() {
+    "use strict";
+    win = platform() === "win32";
+    home = homedir();
+    validName = (name) => /^[A-Za-z0-9][A-Za-z0-9_-]{0,63}$/.test(name);
+    appSupport = platform() === "darwin" ? join(home, "Library/Application Support") : win ? process.env.APPDATA ?? join(home, "AppData/Roaming") : join(home, ".config");
+    backup = (file2) => {
+      if (existsSync(file2)) copyFileSync(file2, `${file2}.bak`);
+    };
+    INVALID3 = "skipped (config has comments/invalid JSON \u2014 edit it manually)";
+    claudeCode = {
+      id: "claude-code",
+      name: "Claude Code",
+      detect: join(home, ".claude"),
+      add(s) {
+        const { command, args } = launch(s);
+        const env = Object.entries(s.env ?? {}).flatMap(([k, v]) => ["-e", `${k}=${v}`]);
+        const r = claude("mcp", "add", "--scope", "user", ...env, s.name, "--", command, ...args);
+        return r.ok ? "installed" : /already exists/i.test(r.out) ? "already installed" : "failed (is `claude` on PATH?)";
+      },
+      remove(name) {
+        const r = claude("mcp", "remove", "--scope", "user", name);
+        return r.ok ? "removed" : /not found|no .*server found/i.test(r.out) ? "not installed" : "failed (is `claude` on PATH?)";
+      },
+      list() {
+        const r = claude("mcp", "list");
+        if (!r.ok) return void 0;
+        return [...r.out.matchAll(/^([^\s:]+):\s/gm)].map((m) => m[1]);
+      }
+    };
+    codexFile = join(home, ".codex/config.toml");
+    escapeRe = (s) => s.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
+    codex = {
+      id: "codex",
+      name: "Codex",
+      detect: join(home, ".codex"),
+      add(s) {
+        const text3 = existsSync(codexFile) ? readFileSync(codexFile, "utf8") : "";
+        if (text3.includes(`[mcp_servers.${s.name}]`)) return "already installed";
+        backup(codexFile);
+        const { command, args } = launch(s);
+        let block = `
+[mcp_servers.${s.name}]
+command = ${JSON.stringify(command)}
+args = ${JSON.stringify(args)}
+`;
+        if (s.env && Object.keys(s.env).length) {
+          block += `
+[mcp_servers.${s.name}.env]
+${Object.entries(s.env).map(([k, v]) => `${k} = ${JSON.stringify(v)}
+`).join("")}`;
+        }
+        mkdirSync(dirname(codexFile), { recursive: true });
+        writeFileSync(codexFile, text3 + block);
+        return "installed";
+      },
+      remove(name) {
+        const text3 = existsSync(codexFile) ? readFileSync(codexFile, "utf8") : "";
+        if (!text3.includes(`[mcp_servers.${name}]`)) return "not installed";
+        backup(codexFile);
+        const table = (suffix) => new RegExp(`\\n?\\[mcp_servers\\.${escapeRe(name)}${suffix}\\]\\n(?:[^\\[\\n].*\\n?)*`);
+        writeFileSync(codexFile, text3.replace(table(""), "").replace(table("\\.env"), ""));
+        return "removed";
+      },
+      list() {
+        const text3 = existsSync(codexFile) ? readFileSync(codexFile, "utf8") : "";
+        return [...text3.matchAll(/^\[mcp_servers\.([A-Za-z0-9_-]+)\]/gm)].map((m) => m[1]);
+      }
+    };
+    opencodeDir = join(home, ".config/opencode");
+    opencodeFile = () => existsSync(join(opencodeDir, "opencode.json")) ? join(opencodeDir, "opencode.json") : join(opencodeDir, "opencode.jsonc");
+    opencode = {
+      id: "opencode",
+      name: "OpenCode",
+      detect: opencodeDir,
+      add: (s) => patchJson(opencodeFile(), "mcp", s.name, {
+        type: "local",
+        command: (({ command, args }) => [command, ...args])(launch(s)),
+        enabled: true,
+        ...s.env ? { environment: s.env } : {}
+      }),
+      remove: (n) => patchJson(opencodeFile(), "mcp", n, void 0),
+      list() {
+        const data = readJson(opencodeFile());
+        return data === "invalid" ? void 0 : Object.keys(data.mcp ?? {});
+      }
+    };
+    clients = [
+      claudeCode,
+      jsonClient("claude-desktop", "Claude Desktop", join(appSupport, "Claude"), join(appSupport, "Claude/claude_desktop_config.json")),
+      jsonClient("cursor", "Cursor", join(home, ".cursor"), join(home, ".cursor/mcp.json")),
+      jsonClient("windsurf", "Windsurf", join(home, ".codeium/windsurf"), join(home, ".codeium/windsurf/mcp_config.json")),
+      jsonClient("kiro", "Kiro", join(home, ".kiro"), join(home, ".kiro/settings/mcp.json")),
+      jsonClient("antigravity", "Antigravity", join(home, ".gemini/antigravity"), join(home, ".gemini/antigravity/mcp_config.json")),
+      jsonClient("gemini", "Gemini CLI", join(home, ".gemini"), join(home, ".gemini/settings.json")),
+      opencode,
+      codex
+    ];
+    detected = (only) => clients.filter((c) => existsSync(c.detect) && (!only || only.includes(c.id)));
+  }
+});
+
+// src/install.ts
+var install_exports = {};
+__export(install_exports, {
+  OURS: () => OURS,
+  install: () => install
+});
+import { execFileSync as execFileSync2 } from "node:child_process";
+import { copyFileSync as copyFileSync2, cpSync, existsSync as existsSync2, mkdirSync as mkdirSync2, readFileSync as readFileSync2, rmSync, writeFileSync as writeFileSync2 } from "node:fs";
+import { dirname as dirname2, join as join2 } from "node:path";
+import { fileURLToPath } from "node:url";
+function patchPlugin(configFile, remove) {
+  const target = join2(home, ".config/opencode/file-tree-plugin");
+  let data;
+  try {
+    data = JSON.parse(readFileSync2(configFile, "utf8") || "{}");
+  } catch {
+    return remove ? "skipped (config unreadable)" : `copied to ${target} \u2014 add it to "plugins" manually`;
+  }
+  const plugins = data.plugins ??= [];
+  const listed = plugins.includes(target);
+  if (remove) {
+    rmSync(target, { recursive: true, force: true });
+    if (!listed) return "not installed";
+    data.plugins = plugins.filter((item) => item !== target);
+    copyFileSync2(configFile, `${configFile}.bak`);
+    writeFileSync2(configFile, JSON.stringify(data, null, 2) + "\n");
+    return "removed";
+  }
+  if (!existsSync2(join2(PKG_DIR, "tui.tsx"))) return "skipped (plugin sources not in this package)";
+  mkdirSync2(target, { recursive: true });
+  for (const item of ["index.ts", "tui.tsx", "src"]) cpSync(join2(PKG_DIR, item), join2(target, item), { recursive: true });
+  if (listed) return "updated";
+  plugins.push(target);
+  copyFileSync2(configFile, `${configFile}.bak`);
+  writeFileSync2(configFile, JSON.stringify(data, null, 2) + "\n");
+  return "installed";
+}
+function claudePane(remove) {
+  const run2 = (...args) => {
+    try {
+      execFileSync2("claude", args, { stdio: "pipe", shell: win });
+      return "";
+    } catch (error62) {
+      return String(error62.stderr || error62.message);
+    }
+  };
+  const outcome = (err, done) => !err ? done : /already (exists|installed)/i.test(err) ? "already installed" : /not found|not installed/i.test(err) ? "not installed" : "failed (is `claude` on PATH?)";
+  if (remove) return outcome(run2("plugin", "uninstall", `${MOD}@adys-mcp`), "removed");
+  run2("plugin", "marketplace", "add", "RandomKid24/adys-mcp");
+  return outcome(run2("plugin", "install", `${MOD}@adys-mcp`), "installed");
+}
+function install(remove = false) {
+  const found = detected();
+  if (found.length === 0) console.log("No supported MCP clients detected.");
+  for (const client of found) {
+    const parts = OURS.filter((s) => !(client.id === "opencode" && s.name === "file-tree")).map((s) => `${s.name} ${remove ? client.remove(s.name) : client.add(s)}`);
+    if (client.id === "opencode") parts.unshift(`sidebar plugin ${patchPlugin(opencodeFile(), remove)}`);
+    if (client.id === "claude-code") parts.push(`/tree pane ${claudePane(remove)}`);
+    console.log(`${client.name.padEnd(15)} ${parts.join("; ")}`);
+  }
+  if (found.length) console.log(`
+Restart your client(s) to ${remove ? "unload" : "load"} the servers.`);
+}
+var PACKAGE, MOD, PKG_DIR, OURS;
+var init_install = __esm({
+  "src/install.ts"() {
+    "use strict";
+    init_clients();
+    PACKAGE = "github:RandomKid24/adys-mcp";
+    MOD = "file-tree-pane";
+    PKG_DIR = dirname2(fileURLToPath(import.meta.url));
+    OURS = [
+      { name: "file-tree", command: "npx", args: ["-y", PACKAGE] },
+      { name: "project-memory", command: "npx", args: ["-y", PACKAGE, "memory"] },
+      { name: "env-doctor", command: "npx", args: ["-y", PACKAGE, "doctor"] }
+    ];
+  }
+});
+
+// src/mcpctl.ts
+var mcpctl_exports = {};
+__export(mcpctl_exports, {
+  mcpctl: () => mcpctl
+});
+function parse3(argv) {
+  const out2 = { env: {}, dry: false };
+  const split = argv.indexOf("--");
+  const flags = split === -1 ? argv : argv.slice(0, split);
+  if (split !== -1) out2.command = argv.slice(split + 1);
+  for (let i = 0; i < flags.length; i++) {
+    const a = flags[i];
+    if (a === "--dry-run") out2.dry = true;
+    else if (a === "--client") out2.only = (flags[++i] ?? "").split(",").filter(Boolean);
+    else if (a === "--url") out2.url = flags[++i];
+    else if (a === "--env") {
+      const pair = flags[++i] ?? "";
+      const eq = pair.indexOf("=");
+      const key = eq === -1 ? pair : pair.slice(0, eq);
+      const value = eq === -1 ? process.env[key] : pair.slice(eq + 1);
+      if (!/^[A-Za-z_][A-Za-z0-9_]*$/.test(key)) return `bad --env name: ${key}`;
+      if (value === void 0) return `--env ${key}: not set in your shell; use KEY=VALUE`;
+      out2.env[key] = value;
+    } else if (a.startsWith("--")) return `unknown option ${a}`;
+    else if (!out2.name) out2.name = a;
+    else return `unexpected argument ${a}`;
+  }
+  if (out2.only) {
+    const bad = out2.only.filter((id) => !clients.some((c) => c.id === id));
+    if (bad.length) return `unknown client: ${bad.join(", ")}`;
+  }
+  return out2;
+}
+function targets(only) {
+  const list = detected(only);
+  if (list.length === 0) {
+    console.log(only ? `None of ${only.join(", ")} is installed.` : "No supported MCP clients detected.");
+    return void 0;
+  }
+  return list;
+}
+function resolve(p) {
+  const name = p.name;
+  if (p.url) {
+    if (!/^https?:\/\//.test(p.url)) return "--url must start with http:// or https://";
+    return { name, command: "npx", args: ["-y", "mcp-remote", p.url], env: void 0 };
+  }
+  if (p.command?.length) return { name, command: p.command[0], args: p.command.slice(1) };
+  const known = CATALOG[name];
+  if (known) return { name, ...known.server };
+  return `"${name}" is not in the catalog \u2014 give a command: add ${name} -- <command> [args...]`;
+}
+function mcpctl(argv) {
+  const [sub, ...rest] = argv;
+  if (sub === "catalog") {
+    for (const [name, { server: server2, about }] of Object.entries(CATALOG)) console.log(`${name.padEnd(20)} ${about}
+${"".padEnd(20)} ${server2.command} ${server2.args.join(" ")}`);
+    return 0;
+  }
+  if (sub === "list") {
+    const found = detected();
+    const rows = found.map((c) => ({ c, names: c.list() }));
+    const all = [...new Set(rows.flatMap((r) => r.names ?? []))].sort();
+    if (all.length === 0) return console.log("No MCP servers found."), 0;
+    const width = Math.max(...all.map((n) => n.length), 6) + 2;
+    console.log("".padEnd(width) + rows.map((r) => r.c.id.padEnd(15)).join(""));
+    for (const name of all) console.log(name.padEnd(width) + rows.map((r) => ((r.names ?? []).includes(name) ? "\u2714" : "\xB7").padEnd(15)).join(""));
+    const unreadable = rows.filter((r) => !r.names).map((r) => r.c.name);
+    if (unreadable.length) console.log(`
+could not read: ${unreadable.join(", ")}`);
+    return 0;
+  }
+  if (sub === "add" || sub === "remove") {
+    const p = parse3(rest);
+    if (typeof p === "string") return console.error(`${p}
+
+${USAGE}`), 2;
+    if (!p.name) return console.error(USAGE), 2;
+    if (!validName(p.name)) return console.error("name: letters, digits, - and _ only (max 64)"), 2;
+    const list = targets(p.only);
+    if (!list) return 1;
+    if (sub === "remove") {
+      for (const c of list) console.log(`${c.name.padEnd(15)} ${p.dry ? "would remove" : c.remove(p.name)}`);
+      return 0;
+    }
+    const server2 = resolve(p);
+    if (typeof server2 === "string") return console.error(server2), 2;
+    if (Object.keys(p.env).length) server2.env = p.env;
+    if (server2.env) console.log("note: env values are written in plain text into each client's config file.");
+    const results = list.map((c) => ({ c, r: p.dry ? `would add ${server2.name}: ${server2.command} ${server2.args.join(" ")}` : c.add(server2) }));
+    for (const { c, r } of results) console.log(`${c.name.padEnd(15)} ${r}`);
+    if (results.some(({ r }) => r === "installed")) console.log("\nRestart your client(s) to load it. Undo: remove " + server2.name);
+    return 0;
+  }
+  console.error(USAGE);
+  return sub ? 2 : 0;
+}
+var CATALOG, USAGE;
+var init_mcpctl = __esm({
+  "src/mcpctl.ts"() {
+    "use strict";
+    init_clients();
+    init_install();
+    CATALOG = {
+      context7: { server: { command: "npx", args: ["-y", "@upstash/context7-mcp"] }, about: "up-to-date library docs for the model" },
+      "sequential-thinking": { server: { command: "npx", args: ["-y", "@modelcontextprotocol/server-sequential-thinking"] }, about: "structured step-by-step reasoning tool" },
+      memory: { server: { command: "npx", args: ["-y", "@modelcontextprotocol/server-memory"] }, about: "simple knowledge-graph memory (see project-memory for the git-aware one)" },
+      playwright: { server: { command: "npx", args: ["-y", "@playwright/mcp@latest"] }, about: "browser automation" },
+      fetch: { server: { command: "uvx", args: ["mcp-server-fetch"] }, about: "fetch web pages as markdown (needs uv)" },
+      ...Object.fromEntries(OURS.map((s) => [s.name, { server: { command: s.command, args: s.args }, about: "from this package" }]))
+    };
+    USAGE = `usage:
+  add <name> [--client a,b] [--env KEY=VAL | --env KEY] [--dry-run] [-- <command> [args...]]
+  add <name> --url <https://remote-mcp>        (bridged with mcp-remote, works in every client)
+  remove <name> [--client a,b]
+  list                                          which servers are in which client
+  catalog                                       short names you can add without a command
+clients: ${clients.map((c) => c.id).join(", ")}`;
   }
 });
 
@@ -37959,24 +38318,24 @@ var init_core3 = __esm({
 });
 
 // src/memory/store.ts
-import { execFileSync } from "node:child_process";
-import { mkdirSync, readFileSync, writeFileSync } from "node:fs";
-import { dirname, join } from "node:path";
+import { execFileSync as execFileSync3 } from "node:child_process";
+import { mkdirSync as mkdirSync3, readFileSync as readFileSync3, writeFileSync as writeFileSync3 } from "node:fs";
+import { dirname as dirname3, join as join3 } from "node:path";
 function loadGraph(root2) {
   try {
-    return parseGraph(readFileSync(graphPath(root2), "utf8"));
+    return parseGraph(readFileSync3(graphPath(root2), "utf8"));
   } catch {
     return parseGraph(void 0);
   }
 }
 function saveGraph(root2, graph) {
   const file2 = graphPath(root2);
-  mkdirSync(dirname(file2), { recursive: true });
-  writeFileSync(file2, JSON.stringify(graph, null, 2) + "\n");
+  mkdirSync3(dirname3(file2), { recursive: true });
+  writeFileSync3(file2, JSON.stringify(graph, null, 2) + "\n");
 }
 function git(root2, ...args) {
   try {
-    return execFileSync("git", ["-C", root2, ...args], { encoding: "utf8", stdio: ["ignore", "pipe", "ignore"] }).trim();
+    return execFileSync3("git", ["-C", root2, ...args], { encoding: "utf8", stdio: ["ignore", "pipe", "ignore"] }).trim();
   } catch {
     return void 0;
   }
@@ -37998,7 +38357,7 @@ var init_store = __esm({
     "use strict";
     init_core3();
     memoryRoot = () => process.env.MEMORY_ROOT ?? process.cwd();
-    graphPath = (root2) => join(root2, ".memory", "graph.json");
+    graphPath = (root2) => join3(root2, ".memory", "graph.json");
     headSha = (root2) => git(root2, "rev-parse", "HEAD");
   }
 });
@@ -38175,9 +38534,9 @@ var init_semver = __esm({
 
 // src/doctor/checks.ts
 import { execFile } from "node:child_process";
-import { existsSync, readdirSync, readFileSync as readFileSync2, statSync } from "node:fs";
+import { existsSync as existsSync3, readdirSync, readFileSync as readFileSync4, statSync } from "node:fs";
 import { createServer } from "node:net";
-import { join as join2 } from "node:path";
+import { join as join4 } from "node:path";
 import { promisify } from "node:util";
 async function out(cmd, args, timeout = 4e3) {
   try {
@@ -38189,7 +38548,7 @@ async function out(cmd, args, timeout = 4e3) {
 }
 function requirements(root2) {
   const reqs = [];
-  const pkg = read(join2(root2, "package.json"));
+  const pkg = read(join4(root2, "package.json"));
   if (pkg) {
     try {
       const engines = JSON.parse(pkg).engines ?? {};
@@ -38197,15 +38556,15 @@ function requirements(root2) {
     } catch {
     }
   }
-  const nvm = (read(join2(root2, ".nvmrc")) ?? read(join2(root2, ".node-version")))?.trim();
+  const nvm = (read(join4(root2, ".nvmrc")) ?? read(join4(root2, ".node-version")))?.trim();
   if (nvm && !reqs.some((r) => r.tool === "node") && /\d/.test(nvm)) reqs.push({ tool: "node", range: nvm.replace(/^v/, ""), source: ".nvmrc" });
-  const py = (read(join2(root2, ".python-version")) ?? "").trim();
+  const py = (read(join4(root2, ".python-version")) ?? "").trim();
   if (py) reqs.push({ tool: "python", range: py, source: ".python-version" });
-  const pyproject = read(join2(root2, "pyproject.toml"))?.match(/requires-python\s*=\s*"([^"]+)"/);
+  const pyproject = read(join4(root2, "pyproject.toml"))?.match(/requires-python\s*=\s*"([^"]+)"/);
   if (pyproject) reqs.push({ tool: "python", range: pyproject[1], source: "pyproject.toml" });
-  const gomod = read(join2(root2, "go.mod"))?.match(/^go\s+(\d+(?:\.\d+)*)/m);
+  const gomod = read(join4(root2, "go.mod"))?.match(/^go\s+(\d+(?:\.\d+)*)/m);
   if (gomod) reqs.push({ tool: "go", range: `>=${gomod[1]}`, source: "go.mod" });
-  const rust = read(join2(root2, "Cargo.toml"))?.match(/rust-version\s*=\s*"([^"]+)"/);
+  const rust = read(join4(root2, "Cargo.toml"))?.match(/rust-version\s*=\s*"([^"]+)"/);
   if (rust) reqs.push({ tool: "rust", range: `>=${rust[1]}`, source: "Cargo.toml" });
   return reqs;
 }
@@ -38213,10 +38572,10 @@ async function checkTools(root2) {
   const findings = [];
   const reqs = requirements(root2);
   const need = new Set(reqs.map((r) => r.tool));
-  if (existsSync(join2(root2, "Dockerfile")) || existsSync(join2(root2, "docker-compose.yml")) || existsSync(join2(root2, "compose.yaml"))) need.add("docker");
-  const lock = ["pnpm-lock.yaml", "yarn.lock", "package-lock.json"].find((f) => existsSync(join2(root2, f)));
+  if (existsSync3(join4(root2, "Dockerfile")) || existsSync3(join4(root2, "docker-compose.yml")) || existsSync3(join4(root2, "compose.yaml"))) need.add("docker");
+  const lock = ["pnpm-lock.yaml", "yarn.lock", "package-lock.json"].find((f) => existsSync3(join4(root2, f)));
   if (lock) need.add(lock === "pnpm-lock.yaml" ? "pnpm" : lock === "yarn.lock" ? "yarn" : "npm");
-  if (existsSync(join2(root2, ".git"))) need.add("git");
+  if (existsSync3(join4(root2, ".git"))) need.add("git");
   for (const tool of need) {
     const probe = PROBES[tool];
     if (!probe) continue;
@@ -38243,7 +38602,7 @@ async function checkTools(root2) {
   }
   const pm = (() => {
     try {
-      return JSON.parse(read(join2(root2, "package.json")) ?? "{}").packageManager;
+      return JSON.parse(read(join4(root2, "package.json")) ?? "{}").packageManager;
     } catch {
       return void 0;
     }
@@ -38257,7 +38616,7 @@ async function checkTools(root2) {
   return findings;
 }
 function checkDeps(root2) {
-  const pkgText = read(join2(root2, "package.json"));
+  const pkgText = read(join4(root2, "package.json"));
   if (!pkgText) return [];
   let pkg;
   try {
@@ -38267,13 +38626,13 @@ function checkDeps(root2) {
   }
   const names = Object.keys({ ...pkg.dependencies, ...pkg.devDependencies });
   if (names.length === 0) return [];
-  const modules = join2(root2, "node_modules");
-  if (!existsSync(modules)) return [{ level: "fail", title: "node_modules is missing", fix: "Run your package manager's install." }];
-  const missing = names.filter((n) => !existsSync(join2(modules, n)));
+  const modules = join4(root2, "node_modules");
+  if (!existsSync3(modules)) return [{ level: "fail", title: "node_modules is missing", fix: "Run your package manager's install." }];
+  const missing = names.filter((n) => !existsSync3(join4(modules, n)));
   if (missing.length) {
     return [{ level: "fail", title: `${missing.length} dependenc${missing.length === 1 ? "y is" : "ies are"} not installed`, detail: missing.slice(0, 8).join(", "), fix: "Run your package manager's install." }];
   }
-  const lock = ["pnpm-lock.yaml", "yarn.lock", "package-lock.json"].map((f) => join2(root2, f)).find(existsSync);
+  const lock = ["pnpm-lock.yaml", "yarn.lock", "package-lock.json"].map((f) => join4(root2, f)).find(existsSync3);
   if (lock && statSync(lock).mtimeMs > statSync(modules).mtimeMs + 1e3) {
     return [{ level: "warn", title: "lockfile is newer than node_modules", detail: "dependencies may be out of date", fix: "Re-run install." }];
   }
@@ -38283,19 +38642,19 @@ function projectPorts(root2) {
   const found = /* @__PURE__ */ new Set();
   const add = (n) => Number.isInteger(n) && n > 0 && n < 65536 && found.add(n);
   for (const file2 of [".env", ".env.example", ".env.local"]) {
-    for (const m of read(join2(root2, file2))?.matchAll(/^\s*(?:\w*PORT)\s*=\s*(\d+)/gim) ?? []) add(Number(m[1]));
+    for (const m of read(join4(root2, file2))?.matchAll(/^\s*(?:\w*PORT)\s*=\s*(\d+)/gim) ?? []) add(Number(m[1]));
   }
   for (const file2 of ["docker-compose.yml", "docker-compose.yaml", "compose.yaml", "compose.yml"]) {
-    for (const m of read(join2(root2, file2))?.matchAll(/["']?(\d{2,5}):\d{2,5}["']?/g) ?? []) add(Number(m[1]));
+    for (const m of read(join4(root2, file2))?.matchAll(/["']?(\d{2,5}):\d{2,5}["']?/g) ?? []) add(Number(m[1]));
   }
-  for (const m of read(join2(root2, "package.json"))?.matchAll(/(?:--port|-p|PORT=)\s*=?\s*(\d{2,5})/g) ?? []) add(Number(m[1]));
+  for (const m of read(join4(root2, "package.json"))?.matchAll(/(?:--port|-p|PORT=)\s*=?\s*(\d{2,5})/g) ?? []) add(Number(m[1]));
   return found.size ? [...found] : COMMON_PORTS;
 }
 function inUse(port) {
-  return new Promise((resolve3) => {
+  return new Promise((resolve4) => {
     const server2 = createServer();
-    server2.once("error", (e) => resolve3(e.code === "EADDRINUSE"));
-    server2.once("listening", () => server2.close(() => resolve3(false)));
+    server2.once("error", (e) => resolve4(e.code === "EADDRINUSE"));
+    server2.once("listening", () => server2.close(() => resolve4(false)));
     server2.listen(port, "127.0.0.1");
   });
 }
@@ -38341,7 +38700,7 @@ function usedVars(root2) {
   const walk = (rel) => {
     let entries;
     try {
-      entries = readdirSync(join2(root2, rel), { withFileTypes: true });
+      entries = readdirSync(join4(root2, rel), { withFileTypes: true });
     } catch {
       return;
     }
@@ -38352,7 +38711,7 @@ function usedVars(root2) {
       if (entry.isDirectory()) walk(path);
       else if (CODE_EXT.test(entry.name)) {
         files += 1;
-        const full = join2(root2, path);
+        const full = join4(root2, path);
         try {
           if (statSync(full).size > 2e5) continue;
         } catch {
@@ -38370,8 +38729,8 @@ function usedVars(root2) {
 }
 function checkEnv(root2) {
   const findings = [];
-  const env = dotenvNames(join2(root2, ".env"));
-  const example = dotenvNames(join2(root2, ".env.example")) ?? dotenvNames(join2(root2, ".env.sample"));
+  const env = dotenvNames(join4(root2, ".env"));
+  const example = dotenvNames(join4(root2, ".env.example")) ?? dotenvNames(join4(root2, ".env.sample"));
   if (example && !env) {
     findings.push({ level: "fail", title: ".env is missing", detail: `.env.example lists ${example.size} variables`, fix: "Copy .env.example to .env and fill in the values." });
   } else if (example && env) {
@@ -38381,7 +38740,7 @@ function checkEnv(root2) {
     }
   }
   const defined = /* @__PURE__ */ new Set([...env ?? [], ...example ?? [], ...Object.keys(process.env)]);
-  for (const file2 of [".env.local", ".env.development"]) for (const n of dotenvNames(join2(root2, file2)) ?? []) defined.add(n);
+  for (const file2 of [".env.local", ".env.development"]) for (const n of dotenvNames(join4(root2, file2)) ?? []) defined.add(n);
   const unset = [...usedVars(root2)].filter(([name]) => !defined.has(name) && !IGNORED_VARS.has(name));
   if (unset.length) {
     findings.push({
@@ -38395,7 +38754,7 @@ function checkEnv(root2) {
   return findings;
 }
 async function checkDocker(root2) {
-  const uses = ["Dockerfile", "docker-compose.yml", "docker-compose.yaml", "compose.yaml", "compose.yml"].some((f) => existsSync(join2(root2, f)));
+  const uses = ["Dockerfile", "docker-compose.yml", "docker-compose.yaml", "compose.yaml", "compose.yml"].some((f) => existsSync3(join4(root2, f)));
   if (!uses) return [];
   const info = await out("docker", ["info", "--format", "{{.ServerVersion}}"], 6e3);
   if (info === void 0) return [];
@@ -38443,7 +38802,7 @@ var init_checks4 = __esm({
     run = promisify(execFile);
     read = (path) => {
       try {
-        return readFileSync2(path, "utf8");
+        return readFileSync4(path, "utf8");
       } catch {
         return void 0;
       }
@@ -38492,7 +38851,7 @@ __export(server_exports2, {
   report: () => report,
   serve: () => serve2
 });
-import { resolve } from "node:path";
+import { resolve as resolve2 } from "node:path";
 async function report() {
   const result = await diagnose(root());
   console.log(result.text);
@@ -38557,7 +38916,7 @@ var init_server4 = __esm({
     init_stdio2();
     init_zod();
     init_checks4();
-    root = () => resolve(process.env.DOCTOR_ROOT ?? process.cwd());
+    root = () => resolve2(process.env.DOCTOR_ROOT ?? process.cwd());
     text2 = (value) => ({ content: [{ type: "text", text: value }] });
   }
 });
@@ -38569,7 +38928,7 @@ __export(viewer_exports, {
 });
 import { execFile as execFile2 } from "node:child_process";
 import { createServer as createServer2 } from "node:http";
-import { platform } from "node:os";
+import { platform as platform2 } from "node:os";
 async function viewGraph(port = 4747) {
   const root2 = memoryRoot();
   const server2 = createServer2((req, res) => {
@@ -38582,11 +38941,11 @@ async function viewGraph(port = 4747) {
       res.end(PAGE);
     }
   });
-  await new Promise((resolve3, reject) => server2.once("error", reject).listen(port, "127.0.0.1", resolve3));
+  await new Promise((resolve4, reject) => server2.once("error", reject).listen(port, "127.0.0.1", resolve4));
   const url2 = `http://127.0.0.1:${port}`;
   console.log(`project memory graph \u2192 ${url2}  (Ctrl+C to stop)`);
-  const opener = platform() === "darwin" ? "open" : platform() === "win32" ? "cmd" : "xdg-open";
-  execFile2(opener, platform() === "win32" ? ["/c", "start", "", url2] : [url2], () => {
+  const opener = platform2() === "darwin" ? "open" : platform2() === "win32" ? "cmd" : "xdg-open";
+  execFile2(opener, platform2() === "win32" ? ["/c", "start", "", url2] : [url2], () => {
   });
 }
 var PAGE;
@@ -38648,175 +39007,17 @@ size();load().then(step);setInterval(load,4000);
   }
 });
 
-// src/install.ts
-var install_exports = {};
-__export(install_exports, {
-  install: () => install
-});
-import { execFileSync as execFileSync2 } from "node:child_process";
-import { copyFileSync, cpSync, existsSync as existsSync2, mkdirSync as mkdirSync2, readFileSync as readFileSync3, rmSync, writeFileSync as writeFileSync2 } from "node:fs";
-import { homedir, platform as platform2 } from "node:os";
-import { dirname as dirname2, join as join3 } from "node:path";
-import { fileURLToPath } from "node:url";
-function patchJson(file2, keyPath, name, entry, remove) {
-  if (!existsSync2(file2)) {
-    if (remove) return "not installed";
-    mkdirSync2(dirname2(file2), { recursive: true });
-  }
-  let data = {};
-  if (existsSync2(file2)) {
-    try {
-      data = JSON.parse(readFileSync3(file2, "utf8") || "{}");
-    } catch {
-      return "skipped (config has comments/invalid JSON \u2014 edit it manually)";
-    }
-  }
-  const bucket = data[keyPath] ??= {};
-  if (remove ? !bucket[name] : bucket[name]) return remove ? "not installed" : "already installed";
-  if (existsSync2(file2)) copyFileSync(file2, `${file2}.bak`);
-  if (remove) delete bucket[name];
-  else bucket[name] = entry;
-  writeFileSync2(file2, JSON.stringify(data, null, 2) + "\n");
-  return remove ? "removed" : "installed";
-}
-function patchPlugin(dir, configFile, remove) {
-  const target = join3(dir, "file-tree-plugin");
-  let data;
-  try {
-    data = JSON.parse(readFileSync3(configFile, "utf8") || "{}");
-  } catch {
-    return remove ? "skipped (config unreadable)" : `copied to ${target} \u2014 add it to "plugins" manually`;
-  }
-  const plugins = data.plugins ??= [];
-  const listed = plugins.includes(target);
-  if (remove) {
-    rmSync(target, { recursive: true, force: true });
-    if (!listed) return "not installed";
-    data.plugins = plugins.filter((item) => item !== target);
-    copyFileSync(configFile, `${configFile}.bak`);
-    writeFileSync2(configFile, JSON.stringify(data, null, 2) + "\n");
-    return "removed";
-  }
-  if (!existsSync2(join3(PKG_DIR, "tui.tsx"))) return "skipped (plugin sources not in this package)";
-  mkdirSync2(target, { recursive: true });
-  for (const item of ["index.ts", "tui.tsx", "src"]) cpSync(join3(PKG_DIR, item), join3(target, item), { recursive: true });
-  if (listed) return "updated";
-  plugins.push(target);
-  copyFileSync(configFile, `${configFile}.bak`);
-  writeFileSync2(configFile, JSON.stringify(data, null, 2) + "\n");
-  return "installed";
-}
-function install(remove = false) {
-  const found = clients.filter((c) => existsSync2(c.detect));
-  if (found.length === 0) console.log("No supported MCP clients detected.");
-  for (const c of found) console.log(`${c.name.padEnd(15)} ${c.run(remove)}`);
-  if (found.length) console.log(`
-Restart your client(s) to ${remove ? "unload" : "load"} \`file-tree\`.`);
-}
-var NAME, SERVERS, MOD, win, CMD, ARGS, home, PKG_DIR, stdio, appSupport, mcpServers, clients;
-var init_install = __esm({
-  "src/install.ts"() {
-    "use strict";
-    NAME = "file-tree";
-    SERVERS = [
-      { name: NAME, extra: [] },
-      { name: "project-memory", extra: ["memory"] },
-      { name: "env-doctor", extra: ["doctor"] }
-    ];
-    MOD = "file-tree-pane";
-    win = platform2() === "win32";
-    [CMD, ...ARGS] = [...win ? ["cmd", "/c"] : [], "npx", "-y", "github:RandomKid24/adys-mcp"];
-    home = homedir();
-    PKG_DIR = dirname2(fileURLToPath(import.meta.url));
-    stdio = (extra) => ({ command: CMD, args: [...ARGS, ...extra] });
-    appSupport = platform2() === "darwin" ? join3(home, "Library/Application Support") : win ? process.env.APPDATA ?? join3(home, "AppData/Roaming") : join3(home, ".config");
-    mcpServers = (file2) => (remove) => SERVERS.map((s) => `${s.name} ${patchJson(file2, "mcpServers", s.name, stdio(s.extra), remove)}`).join("; ");
-    clients = [
-      {
-        name: "Claude Code",
-        detect: join3(home, ".claude"),
-        run(remove) {
-          const claude = (...args) => {
-            try {
-              execFileSync2("claude", args, { stdio: "pipe", shell: win });
-              return "";
-            } catch (error62) {
-              return String(error62.stderr || error62.message);
-            }
-          };
-          const outcome = (err, done) => !err ? done : /already (exists|installed)/i.test(err) ? "already installed" : /not found|no .*server found|not installed/i.test(err) ? "not installed" : "failed (is `claude` on PATH?)";
-          const mcp = SERVERS.map(
-            (srv) => `${srv.name} ` + outcome(
-              remove ? claude("mcp", "remove", "--scope", "user", srv.name) : claude("mcp", "add", "--scope", "user", srv.name, "--", CMD, ...ARGS, ...srv.extra),
-              remove ? "removed" : "installed"
-            )
-          ).join("; ");
-          let pane;
-          if (remove) pane = outcome(claude("plugin", "uninstall", `${MOD}@adys-mcp`), "removed");
-          else {
-            claude("plugin", "marketplace", "add", "RandomKid24/adys-mcp");
-            pane = outcome(claude("plugin", "install", `${MOD}@adys-mcp`), "installed");
-          }
-          return `${mcp}; /tree pane ${pane}`;
-        }
-      },
-      { name: "Claude Desktop", detect: join3(appSupport, "Claude"), run: mcpServers(join3(appSupport, "Claude/claude_desktop_config.json")) },
-      { name: "Cursor", detect: join3(home, ".cursor"), run: mcpServers(join3(home, ".cursor/mcp.json")) },
-      { name: "Windsurf", detect: join3(home, ".codeium/windsurf"), run: mcpServers(join3(home, ".codeium/windsurf/mcp_config.json")) },
-      { name: "Kiro", detect: join3(home, ".kiro"), run: mcpServers(join3(home, ".kiro/settings/mcp.json")) },
-      {
-        name: "Antigravity",
-        detect: join3(home, ".gemini/antigravity"),
-        run: mcpServers(join3(home, ".gemini/antigravity/mcp_config.json"))
-      },
-      { name: "Gemini CLI", detect: join3(home, ".gemini"), run: mcpServers(join3(home, ".gemini/settings.json")) },
-      {
-        name: "OpenCode",
-        detect: join3(home, ".config/opencode"),
-        run(remove) {
-          const dir = join3(home, ".config/opencode");
-          const file2 = existsSync2(join3(dir, "opencode.json")) ? join3(dir, "opencode.json") : join3(dir, "opencode.jsonc");
-          const extra = SERVERS.slice(1).map((srv) => {
-            const entry = { type: "local", command: [CMD, ...ARGS, ...srv.extra], enabled: true };
-            return `${srv.name} ${patchJson(file2, "mcp", srv.name, entry, remove)}`;
-          });
-          return [`sidebar plugin ${patchPlugin(dir, file2, remove)}`, ...extra].join("; ");
-        }
-      },
-      {
-        name: "Codex",
-        detect: join3(home, ".codex"),
-        run(remove) {
-          const file2 = join3(home, ".codex/config.toml");
-          return SERVERS.map((srv) => {
-            const text3 = existsSync2(file2) ? readFileSync3(file2, "utf8") : "";
-            const header = `[mcp_servers.${srv.name}]`;
-            const has = text3.includes(header);
-            if (remove ? !has : has) return `${srv.name} ${remove ? "not installed" : "already installed"}`;
-            if (text3) copyFileSync(file2, `${file2}.bak`);
-            const block = new RegExp(`\\n?\\[mcp_servers\\.${srv.name}\\]\\n(?:[^\\[\\n].*\\n?)*`);
-            const args = [...ARGS, ...srv.extra];
-            writeFileSync2(file2, remove ? text3.replace(block, "") : `${text3}
-${header}
-command = "${CMD}"
-args = ${JSON.stringify(args)}
-`);
-            return `${srv.name} ${remove ? "removed" : "installed"}`;
-          }).join("; ");
-        }
-      }
-    ];
-  }
-});
-
 // mcp.ts
 init_mcp();
 init_stdio2();
 init_zod();
 init_ignore();
-import { execFileSync as execFileSync3 } from "node:child_process";
-import { readdirSync as readdirSync2, readFileSync as readFileSync4, statSync as statSync2 } from "node:fs";
-import { relative, resolve as resolve2 } from "node:path";
+import { execFileSync as execFileSync4 } from "node:child_process";
+import { readdirSync as readdirSync2, readFileSync as readFileSync5, statSync as statSync2 } from "node:fs";
+import { relative, resolve as resolve3 } from "node:path";
+if (["add", "remove", "list", "catalog"].includes(process.argv[2] ?? "")) {
+  process.exit((await Promise.resolve().then(() => (init_mcpctl(), mcpctl_exports))).mcpctl(process.argv.slice(2)));
+}
 if (process.argv[2] === "memory") {
   await (await Promise.resolve().then(() => (init_server3(), server_exports))).serve();
   await new Promise((done) => process.stdin.on("close", done));
@@ -38839,9 +39040,9 @@ if (process.argv[2] === "install" || process.argv[2] === "uninstall") {
   (await Promise.resolve().then(() => (init_install(), install_exports))).install(process.argv[2] === "uninstall");
   process.exit(0);
 }
-var ROOT = resolve2(process.argv[2] ?? process.cwd());
+var ROOT = resolve3(process.argv[2] ?? process.cwd());
 function gitChanges(root2) {
-  const git2 = (...args) => execFileSync3("git", ["-c", "core.quotepath=off", "-C", root2, ...args], {
+  const git2 = (...args) => execFileSync4("git", ["-c", "core.quotepath=off", "-C", root2, ...args], {
     encoding: "utf8",
     maxBuffer: 64 << 20,
     stdio: ["ignore", "pipe", "pipe"]
@@ -38884,7 +39085,7 @@ function renderTree(root2, maxDepth, maxRows, extraIgnore) {
   const walk = (dir, rel, depth) => {
     let entries;
     try {
-      entries = readdirSync2(resolve2(root2, rel), { withFileTypes: true });
+      entries = readdirSync2(resolve3(root2, rel), { withFileTypes: true });
     } catch {
       return;
     }
@@ -38911,9 +39112,9 @@ function renderTree(root2, maxDepth, maxRows, extraIgnore) {
   return [`${root2}`, ...lines].join("\n");
 }
 function inRoot(path) {
-  const full = resolve2(ROOT, path);
+  const full = resolve3(ROOT, path);
   const rel = relative(ROOT, full);
-  if (rel.startsWith("..") || resolve2(rel) === rel) throw new Error(`Path is outside the project: ${path}`);
+  if (rel.startsWith("..") || resolve3(rel) === rel) throw new Error(`Path is outside the project: ${path}`);
   return full;
 }
 function searchFiles(query, limit, extraIgnore) {
@@ -38921,7 +39122,7 @@ function searchFiles(query, limit, extraIgnore) {
   const needle = query.toLowerCase();
   const hits = [];
   const walk = (rel) => {
-    for (const entry of readdirSync2(resolve2(ROOT, rel), { withFileTypes: true })) {
+    for (const entry of readdirSync2(resolve3(ROOT, rel), { withFileTypes: true })) {
       if (hits.length >= limit) return;
       const path = rel ? `${rel}/${entry.name}` : entry.name;
       if (isIgnored(path, ignore)) continue;
@@ -38945,7 +39146,7 @@ server.registerTool(
     }
   },
   async ({ path, maxDepth = 4, maxRows = 160, ignore = [] }) => ({
-    content: [{ type: "text", text: renderTree(resolve2(ROOT, path ?? "."), maxDepth, maxRows, ignore) }]
+    content: [{ type: "text", text: renderTree(resolve3(ROOT, path ?? "."), maxDepth, maxRows, ignore) }]
   })
 );
 server.registerTool(
@@ -38955,7 +39156,7 @@ server.registerTool(
     inputSchema: { path: external_exports.string().optional().describe("Repo directory. Defaults to the project root.") }
   },
   async ({ path }) => {
-    const result = gitChanges(resolve2(ROOT, path ?? "."));
+    const result = gitChanges(resolve3(ROOT, path ?? "."));
     if (typeof result === "string") return { content: [{ type: "text", text: result }], isError: true };
     const rows = [...result].sort(([a], [b]) => a.localeCompare(b));
     const text3 = rows.length ? `${rows.length} file(s) changed:
@@ -38992,7 +39193,7 @@ server.registerTool(
     try {
       const full = inRoot(path);
       if (statSync2(full).size > 200 * 1024) throw new Error("File is larger than 200 KB; use a smaller file.");
-      const text3 = readFileSync4(full, "utf8");
+      const text3 = readFileSync5(full, "utf8");
       if (text3.includes("\0")) throw new Error("Binary file.");
       const out2 = startLine || endLine ? text3.split("\n").slice((startLine ?? 1) - 1, endLine).join("\n") : text3;
       return { content: [{ type: "text", text: out2 }] };

@@ -9,6 +9,10 @@ import { relative, resolve } from "node:path"
 import { z } from "zod"
 import { createIgnore, isIgnored } from "./src/lib/ignore.ts"
 
+if (["add", "remove", "list", "catalog"].includes(process.argv[2] ?? "")) {
+  process.exit((await import("./src/mcpctl.ts")).mcpctl(process.argv.slice(2)))
+}
+
 if (process.argv[2] === "memory") {
   await (await import("./src/memory/server.ts")).serve()
   await new Promise<void>((done) => process.stdin.on("close", done)) // run until the client disconnects

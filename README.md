@@ -72,6 +72,22 @@ One call (`diagnose`) answers the "works on my machine" questions that otherwise
 
 Humans can skip the AI entirely: `npx -y github:RandomKid24/adys-mcp doctor --report` prints the same report (exit code 1 if anything failed — handy in CI or a pre-start script). Installed by the same `install` command.
 
+## `mcp-installer` — add any MCP to every tool with one command
+
+Editing five config files in five formats (and the Windows `cmd /c` workaround) is the annoying part of using MCP. This does it for you:
+
+```bash
+npx -y github:RandomKid24/adys-mcp add context7                      # from the built-in catalog
+npx -y github:RandomKid24/adys-mcp add mytool -- npx -y some-mcp     # any command
+npx -y github:RandomKid24/adys-mcp add api --url https://host/mcp    # remote server (bridged via mcp-remote)
+npx -y github:RandomKid24/adys-mcp add mytool --env API_KEY=abc --client cursor,codex
+npx -y github:RandomKid24/adys-mcp list                              # which server is in which client
+npx -y github:RandomKid24/adys-mcp remove mytool
+npx -y github:RandomKid24/adys-mcp catalog
+```
+
+Works with Claude Code, Claude Desktop, Codex, Cursor, Windsurf, Kiro, Antigravity, Gemini CLI and OpenCode. Every config it edits is backed up to `.bak` first, existing servers are never touched, it skips configs it can't parse safely, and `--dry-run` shows what would change. `--env` values are stored in plain text in each client's config (same as editing it by hand). No tokens involved — it's a command you run. Catalog commands come from each project's docs; override any with `-- <command>`.
+
 ## License
 
 MIT © Ady
