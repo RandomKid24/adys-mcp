@@ -123,7 +123,7 @@ export default Plugin.define({
           title: "File tree: show / hide",
           group: "File tree",
           palette: true,
-          slash: { name: "filetree", aliases: ["tree", "ft"] },
+          slash: { name: "filetree" },
           run: () =>
             updateUi((draft) => {
               draft.visible = !draft.visible
@@ -149,32 +149,6 @@ export default Plugin.define({
           run: () => bump("refresh"),
         },
         {
-          id: "filetree.expand-all",
-          title: "File tree: expand all folders",
-          group: "File tree",
-          palette: true,
-          slash: { name: "filetree-expand" },
-          run: () => {
-            updateUi((draft) => {
-              draft.expanded = {}
-              draft.expandAll = true
-            })
-          },
-        },
-        {
-          id: "filetree.collapse-all",
-          title: "File tree: collapse all folders",
-          group: "File tree",
-          palette: true,
-          slash: { name: "filetree-collapse" },
-          run: () => {
-            updateUi((draft) => {
-              draft.expanded = {}
-              draft.expandAll = false
-            })
-          },
-        },
-        {
           id: "filetree.panel",
           title: "File tree: open full tree panel",
           group: "File tree",
@@ -182,33 +156,6 @@ export default Plugin.define({
           slash: { name: "filetree-panel" },
           run: () => {
             context.ui.panel.open(PANEL_NAME)
-          },
-        },
-        {
-          id: "filetree.panel-fullscreen",
-          title: "File tree: open full tree panel (full screen)",
-          group: "File tree",
-          palette: true,
-          run: () => {
-            context.ui.panel.open(PANEL_NAME, { presentation: "fullscreen" })
-          },
-        },
-        {
-          id: "filetree.depth",
-          title: "File tree: set depth",
-          group: "File tree",
-          palette: true,
-          run: async () => {
-            const options = [1, 2, 3, 4, 5, 6, 8].map((value) => ({ title: `${value} levels`, value }))
-            const value = await context.ui.dialog.select({ title: "Tree depth", options, current: settings.expandDepth })
-            if (typeof value === "number") {
-              updateUi((draft) => {
-                draft.expandAll = undefined
-              })
-              await updateSettings((draft) => {
-                draft.expandDepth = value
-              })
-            }
           },
         },
       ],

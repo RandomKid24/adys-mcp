@@ -134,7 +134,8 @@ Pass options with the object form of a `plugins` entry:
         "includeSubagents": true,
         "maxDepth": 4,
         "maxRows": 160,
-        "expandDepth": 2,
+        "expandDepth": 1,
+        "sidebarRows": 15,
         "concurrency": 8,
         "ignore": ["tmp", "fixtures"]
       }
@@ -150,7 +151,8 @@ Pass options with the object form of a `plugins` entry:
 | `includeSubagents` | `false`   |            | Also highlight files touched by child (subagent) sessions.         |
 | `maxDepth`         | `4`       | 1–12       | How many directory levels to walk below the project root.          |
 | `maxRows`          | `160`     | 10–2000    | Cap on collected/rendered rows, to keep the tree bounded.          |
-| `expandDepth`      | `2`       | 1–12       | Directories expanded by default in the **sidebar** view.           |
+| `sidebarRows`      | `15`      | 3–200      | Rows shown in the sidebar before it collapses to `… N more`.       |
+| `expandDepth`      | `1`       | 1–12       | Directories expanded by default in the **sidebar** view.           |
 | `concurrency`      | `8`       | 1–32       | Maximum concurrent `file.list` requests while walking.             |
 | `ignore`           | `[]`      |            | Extra path segments to skip, on top of the built-in ignore list.   |
 
@@ -166,17 +168,12 @@ Available from the command palette and, where noted, as slash commands.
 
 | Command / palette entry                       | Slash             | What it does                                  |
 | --------------------------------------------- | ----------------- | --------------------------------------------- |
-| File tree: show / hide                        | `/filetree`       | Toggle the sidebar tree (`tree`, `ft` aliases). |
+| File tree: show / hide                        | `/filetree`       | Toggle the sidebar tree. |
 | File tree: toggle edited-only view            | `/filetree-mode`  | Show just the edited files.                   |
 | File tree: refresh                            | `/filetree-refresh` | Rescan the tree.                            |
-| File tree: expand all folders                 | `/filetree-expand` | Open every folder.                           |
-| File tree: collapse all folders               | `/filetree-collapse` | Close every folder.                        |
 | File tree: open full tree panel               | `/filetree-panel` | Open the whole tree in the session panel.     |
-| File tree: open full tree panel (full screen) |                   | Same, requesting a full-screen panel.         |
-| File tree: set depth                          |                   | Dialog to choose the sidebar expansion depth. |
 
-Clicking a folder row toggles just that folder; expand/collapse-all overrides
-every folder at once (they reset any per-folder toggles).
+Clicking a folder row toggles just that folder.
 
 The full-tree panel is a `session.panel` contribution: the host owns its sizing
 and focus, and the tree scrolls inside it.

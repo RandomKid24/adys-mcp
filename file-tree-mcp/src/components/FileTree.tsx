@@ -174,8 +174,11 @@ export function FileTree(props: FileTreeProps) {
     props.onToggleDir?.(row.path, !row.open)
   }
 
+  const shown = () => (isPanel() ? flat().rows : flat().rows.slice(0, props.config.sidebarRows))
+  const hidden = () => flat().rows.length - shown().length
+
   const rows = () => (
-    <For each={flat().rows}>
+    <For each={shown()}>
       {(row) => {
         const clickable = (): boolean => row.kind === "dir" && row.expandable === true
         return (
@@ -228,7 +231,11 @@ export function FileTree(props: FileTreeProps) {
         </Show>
       </Show>
 
-      <Show when={flat().truncated}>
+      <Show when={!isPanel() && hidden() > 0}>
+        <text wrapMode="none" fg={theme.text.muted}>{`… ${hidden()} more · /filetree-panel`}</text>
+      </Show>
+
+      <Show when={isPanel() && flat().truncated}>
         <text wrapMode="none" fg={theme.text.muted}>… truncated (raise maxRows / maxDepth)</text>
       </Show>
     </box>
