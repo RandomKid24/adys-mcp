@@ -316,6 +316,7 @@ async function flushSession($: any, files: string[]): Promise<void> {
 
 export const register: Register = on => {
   let touched: string[] = []
+  let isRefreshing = false // one rescan at a time: each one spawns several git processes
 
   on('session.start', async ($, e, next) => {
     await $.command.register({ name: 'tree', description: 'Show the project file tree with git changes (free, no tokens)' })
@@ -339,12 +340,18 @@ export const register: Register = on => {
     const ran = await next(e)
     if (['Edit', 'Write', 'MultiEdit', 'NotebookEdit', 'Bash'].includes(e.tool)) {
       const target = String((e as any).file_path ?? (e as any).notebook_path ?? '')
-      void refresh($)
-        .then(() => (target ? markActive($, target) : ''))
-        .then(rel => {
-          if (rel && !touched.includes(rel)) touched.push(rel)
-        })
-        .catch(() => {})
+      if (!isRefreshing) {
+        isRefreshing = true
+        void refresh($)
+          .then(() => (target ? markActive($, target) : ''))
+          .then(rel => {
+            if (rel && !touched.includes(rel)) touched.push(rel)
+          })
+          .catch(() => {})
+          .then(() => {
+            isRefreshing = false
+          })
+      }
     }
     return ran
   })
