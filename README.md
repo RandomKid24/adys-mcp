@@ -56,6 +56,22 @@ A shared, git-aware memory graph for your project. Decisions (with the **why** a
 - **See it:** `npx -y github:RandomKid24/adys-mcp graph` opens a local web graph — drag nodes, filter, time-travel slider, orange ring = possibly outdated. Costs no tokens.
 - Installed by the same one command above (`install` registers both servers).
 
+## `env-doctor` — find out why it won't run
+
+One call (`diagnose`) answers the "works on my machine" questions that otherwise cost a dozen shell commands:
+
+| Tool | What it checks |
+| ---- | -------------- |
+| `diagnose` | Everything below, as one report with fixes. |
+| `check_tools` | node / python / go / rust / docker / package manager vs what `package.json` engines, `.nvmrc`, `go.mod`, `pyproject.toml` require. |
+| `check_deps` | Dependencies installed? Lockfile newer than `node_modules`? |
+| `check_env` | `.env` vs `.env.example`, and variables read in code but defined nowhere. **Names only — values are never read or shown.** |
+| `check_ports` | Busy ports and the process holding them (project's own ports by default). |
+| `check_docker` | Is the daemon running? |
+| `explain_error` | Paste an error → likely cause and which check to run. |
+
+Humans can skip the AI entirely: `npx -y github:RandomKid24/adys-mcp doctor --report` prints the same report (exit code 1 if anything failed — handy in CI or a pre-start script). Installed by the same `install` command.
+
 ## License
 
 MIT © Ady

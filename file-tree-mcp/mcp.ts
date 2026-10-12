@@ -15,6 +15,14 @@ if (process.argv[2] === "memory") {
   process.exit(0)
 }
 
+if (process.argv[2] === "doctor") {
+  const doctor = await import("./src/doctor/server.ts")
+  if (process.argv[3] === "--report") process.exit(await doctor.report())
+  await doctor.serve()
+  await new Promise<void>((done) => process.stdin.on("close", done)) // run until the client disconnects
+  process.exit(0)
+}
+
 if (process.argv[2] === "graph") {
   await (await import("./src/memory/viewer.ts")).viewGraph(Number(process.argv[3]) || undefined)
   await new Promise(() => {})

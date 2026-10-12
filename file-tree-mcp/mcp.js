@@ -8540,7 +8540,7 @@ function isRef(value) {
 function cloneIssues(issues) {
   return issues.map((iss) => iss.path ? { ...iss, path: iss.path.slice() } : { ...iss });
 }
-function isRecursive(inst, stack, resolve2) {
+function isRecursive(inst, stack, resolve3) {
   const cached2 = recursive.get(inst);
   if (cached2 !== void 0)
     return cached2 ? PROVEN : NONE;
@@ -8550,7 +8550,7 @@ function isRecursive(inst, stack, resolve2) {
   let result = NONE;
   const check2 = (child) => {
     if (result !== PROVEN && child?._zod) {
-      const answer = isRecursive(child, stack, resolve2);
+      const answer = isRecursive(child, stack, resolve3);
       if (answer > result)
         result = answer;
     }
@@ -8561,7 +8561,7 @@ function isRecursive(inst, stack, resolve2) {
       const desc = Object.getOwnPropertyDescriptor(sh, key);
       if (spread && !desc.enumerable)
         continue;
-      const child = desc.get ? ASSUMED : desc.value?._zod ? isRecursive(desc.value, stack, resolve2) : NONE;
+      const child = desc.get ? ASSUMED : desc.value?._zod ? isRecursive(desc.value, stack, resolve3) : NONE;
       if (child > answer)
         answer = child;
     }
@@ -8625,7 +8625,7 @@ function isRecursive(inst, stack, resolve2) {
       break;
     // `$ZodLazy` caches its inner on the def, so a resolved edge is followed exactly
     case "lazy": {
-      const inner = def._cachedInner ?? (resolve2 ? inst._zod.innerType : void 0);
+      const inner = def._cachedInner ?? (resolve3 ? inst._zod.innerType : void 0);
       merge2(inner ? isRecursive(inner, stack, false) : ASSUMED);
       break;
     }
@@ -12988,8 +12988,8 @@ var capitalizeFirstCharacter, error33;
 var init_lt = __esm({
   "node_modules/zod/v4/locales/lt.js"() {
     init_util2();
-    capitalizeFirstCharacter = (text2) => {
-      return text2.charAt(0).toUpperCase() + text2.slice(1);
+    capitalizeFirstCharacter = (text3) => {
+      return text3.charAt(0).toUpperCase() + text3.slice(1);
     };
     error33 = () => {
       const Sizable = {
@@ -16913,9 +16913,9 @@ function withParser(schema, parser) {
     if (ctx && isBackEdge(ctx, payload.value)) {
       return originalRun(payload, ctx);
     }
-    const out = parser(payload.value);
-    if (out !== INVALID2) {
-      payload.value = out;
+    const out2 = parser(payload.value);
+    if (out2 !== INVALID2) {
+      payload.value = out2;
       return payload;
     }
     if (ctx)
@@ -16936,9 +16936,9 @@ function installCompiledUserMethods(target, source, parser) {
   if (typeof sourceAny.safeParse === "function") {
     const originalSafeParse = sourceAny.safeParse;
     targetAny.safeParse = (data, params) => {
-      const out = parser(data);
-      if (out !== INVALID2) {
-        return { success: true, data: out };
+      const out2 = parser(data);
+      if (out2 !== INVALID2) {
+        return { success: true, data: out2 };
       }
       return originalSafeParse(data, params);
     };
@@ -16946,9 +16946,9 @@ function installCompiledUserMethods(target, source, parser) {
   if (typeof sourceAny.parse === "function") {
     const originalParse = sourceAny.parse;
     targetAny.parse = (data, params) => {
-      const out = parser(data);
-      if (out !== INVALID2) {
-        return out;
+      const out2 = parser(data);
+      if (out2 !== INVALID2) {
+        return out2;
       }
       return originalParse(data, params);
     };
@@ -17176,8 +17176,8 @@ function generateMultipleOfCheck(doc, ctx, def, accessor) {
   }
 }
 function generateNumberFormatCheck(doc, def, accessor) {
-  const format = def.format;
-  switch (format) {
+  const format2 = def.format;
+  switch (format2) {
     case "safeint":
       doc.write(`if (!Number.isSafeInteger(${accessor})) return INVALID;`);
       break;
@@ -17194,16 +17194,16 @@ function generateNumberFormatCheck(doc, def, accessor) {
       doc.write(`if (!Number.isFinite(${accessor})) return INVALID;`);
       break;
     default: {
-      void format;
-      throw new ZodCompileUnsupportedError(`number format ${format}`);
+      void format2;
+      throw new ZodCompileUnsupportedError(`number format ${format2}`);
     }
   }
 }
 function generateBigIntFormatCheck(doc, def, accessor) {
-  const format = def.format;
-  if (!format)
+  const format2 = def.format;
+  if (!format2)
     return;
-  switch (format) {
+  switch (format2) {
     case "int64":
       doc.write(`if (${accessor} < -9223372036854775808n || ${accessor} > 9223372036854775807n) return INVALID;`);
       break;
@@ -17211,8 +17211,8 @@ function generateBigIntFormatCheck(doc, def, accessor) {
       doc.write(`if (${accessor} < 0n || ${accessor} > 18446744073709551615n) return INVALID;`);
       break;
     default: {
-      void format;
-      throw new ZodCompileUnsupportedError(`bigint format ${format}`);
+      void format2;
+      throw new ZodCompileUnsupportedError(`bigint format ${format2}`);
     }
   }
 }
@@ -17367,8 +17367,8 @@ function generateStringFormatCheck(doc, ctx, def, accessor, needsValue = true) {
     doc.write(`if (!${patternConst}.test(${accessor})) return INVALID;`);
     return accessor;
   }
-  const format = def.format;
-  switch (format) {
+  const format2 = def.format;
+  switch (format2) {
     case "regex":
       throw new ZodCompileUnsupportedError("regex format without a pattern");
     case "lowercase":
@@ -17391,8 +17391,8 @@ function generateStringFormatCheck(doc, ctx, def, accessor, needsValue = true) {
       break;
     }
     default: {
-      void format;
-      throw new ZodCompileUnsupportedError(`string format ${format}`);
+      void format2;
+      throw new ZodCompileUnsupportedError(`string format ${format2}`);
     }
   }
   return accessor;
@@ -17675,13 +17675,13 @@ function generateObjectCheck(doc, ctx, schema, accessor, buildsValue = true) {
     doc.write(`const ${outputVar} = {};`);
     for (const k of allKeys) {
       const kx = keyExpr(k);
-      const out = propOutputs.get(k);
+      const out2 = propOutputs.get(k);
       if (dropsWhenAbsent(propShape[k])) {
-        doc.write(`if (${kx} in ${accessor}) ${outputVar}[${kx}] = ${out};`);
+        doc.write(`if (${kx} in ${accessor}) ${outputVar}[${kx}] = ${out2};`);
       } else if (mayOmitUndefined(propShape[k])) {
-        doc.write(`if (${out} !== undefined || ${kx} in ${accessor}) ${outputVar}[${kx}] = ${out};`);
+        doc.write(`if (${out2} !== undefined || ${kx} in ${accessor}) ${outputVar}[${kx}] = ${out2};`);
       } else {
-        doc.write(`${outputVar}[${kx}] = ${out};`);
+        doc.write(`${outputVar}[${kx}] = ${out2};`);
       }
     }
   }
@@ -19366,11 +19366,11 @@ function _catch(Class2, innerType, catchValue) {
   });
 }
 // @__NO_SIDE_EFFECTS__
-function _pipe(Class2, in_, out) {
+function _pipe(Class2, in_, out2) {
   return new Class2({
     type: "pipe",
     in: in_,
-    out
+    out: out2
   });
 }
 // @__NO_SIDE_EFFECTS__
@@ -19536,12 +19536,12 @@ function _stringbool(Classes, _params) {
   return codec2;
 }
 // @__NO_SIDE_EFFECTS__
-function _stringFormat(Class2, format, fnOrRegex, _params = {}) {
+function _stringFormat(Class2, format2, fnOrRegex, _params = {}) {
   const params = normalizeParams(_params);
   const def = {
     check: "string_format",
     type: "string",
-    format,
+    format: format2,
     fn: typeof fnOrRegex === "function" ? fnOrRegex : (val) => fnOrRegex.test(val),
     ...params
   };
@@ -19673,8 +19673,8 @@ function encodeJSONPointerSegment(segment) {
   return segment.replace(/~/g, "~0").replace(/\//g, "~1");
 }
 function extractDefs(ctx, schema) {
-  const root = ctx.seen.get(schema);
-  if (!root)
+  const root2 = ctx.seen.get(schema);
+  if (!root2)
     throw new Error("Unprocessed schema. This is a bug in Zod.");
   if (ctx.external && ctx.sharedDefsExtractedFor === ctx.external)
     return;
@@ -19703,7 +19703,7 @@ function extractDefs(ctx, schema) {
     }
     const uriPrefix = `#`;
     const defUriPrefix = `${uriPrefix}/${defsSegment}/`;
-    if (entry[1] === root && !entry[1].schema.id) {
+    if (entry[1] === root2 && !entry[1].schema.id) {
       return { ref: uriPrefix };
     }
     const defId = entry[1].schema.id ?? `__schema${ctx.counter++}`;
@@ -19872,8 +19872,8 @@ function foldIntersection(json2) {
   assignProps(json2, folded);
 }
 function finalize(ctx, schema) {
-  const root = ctx.seen.get(schema);
-  if (!root)
+  const root2 = ctx.seen.get(schema);
+  if (!root2)
     throw new Error("Unprocessed schema. This is a bug in Zod.");
   const flattenRef = (zodSchema) => {
     const seen = ctx.seen.get(zodSchema);
@@ -19984,7 +19984,7 @@ function finalize(ctx, schema) {
       throw new Error("Schema is missing an `id` property");
     result.$id = ctx.external.uri(id);
   }
-  assignProps(result, root.defId ? root.schema : root.def ?? root.schema);
+  assignProps(result, root2.defId ? root2.schema : root2.def ?? root2.schema);
   const rootMetaId = ctx.metadataRegistry.get(schema)?.id;
   if (rootMetaId !== void 0 && result.id === rootMetaId)
     delete result.id;
@@ -20168,7 +20168,7 @@ function stringifyKeyNames(bySchema, json2, visited) {
   const values = json2.enum ?? (json2.const !== void 0 ? [json2.const] : void 0);
   if (!numericType && !values?.some((v) => typeof v === "number"))
     return json2;
-  const { minimum, maximum, exclusiveMinimum, exclusiveMaximum, multipleOf, format, id, ...rest } = json2;
+  const { minimum, maximum, exclusiveMinimum, exclusiveMaximum, multipleOf, format: format2, id, ...rest } = json2;
   if (rest.enum)
     rest.enum = rest.enum.map((v) => typeof v === "number" ? String(v) : v);
   else if (typeof rest.const === "number")
@@ -20284,9 +20284,9 @@ var init_json_schema_processors = __esm({
     intersectMime = (agg, mime) => {
       agg.mime = agg.mime ? agg.mime.filter((m) => mime.includes(m)) : [...mime];
     };
-    setFormat = (agg, format) => {
-      agg.format = format;
-      if (format.includes("int"))
+    setFormat = (agg, format2) => {
+      agg.format = format2;
+      if (format2.includes("int"))
         agg.isInt = true;
     };
     minContributor = (agg, def) => narrowMin(agg, "minimum", def.minimum);
@@ -20336,16 +20336,16 @@ var init_json_schema_processors = __esm({
     stringProcessor = (schema, ctx, _json, _params) => {
       const json2 = _json;
       json2.type = "string";
-      const { minimum, maximum, format, patterns, contentEncoding, laxFormat } = aggregateChecks(schema);
+      const { minimum, maximum, format: format2, patterns, contentEncoding, laxFormat } = aggregateChecks(schema);
       if (typeof minimum === "number")
         json2.minLength = minimum;
       if (typeof maximum === "number")
         json2.maxLength = maximum;
-      if (format) {
-        json2.format = formatMap[format] ?? format;
+      if (format2) {
+        json2.format = formatMap[format2] ?? format2;
         if (json2.format === "")
           delete json2.format;
-        if (format === "time" || laxFormat) {
+        if (format2 === "time" || laxFormat) {
           delete json2.format;
         }
       }
@@ -21388,7 +21388,7 @@ function visit(schema, fnOrHandlers) {
     return h ? h(node2, rewritten) : node2;
   };
   const cache = /* @__PURE__ */ new Map();
-  function run(s) {
+  function run2(s) {
     const cached2 = cache.get(s);
     if (cached2 === RESOLVING) {
       return new $ZodLazy({
@@ -21414,21 +21414,21 @@ function visit(schema, fnOrHandlers) {
         let changed = false;
         const newShape = {};
         for (const k of keys) {
-          const mapped = run(oldShape[k]);
+          const mapped = run2(oldShape[k]);
           if (mapped !== oldShape[k])
             changed = true;
           newShape[k] = mapped;
         }
         let newCatchall = def.catchall;
         if (def.catchall) {
-          newCatchall = run(def.catchall);
+          newCatchall = run2(def.catchall);
           if (newCatchall !== def.catchall)
             changed = true;
         }
         return changed ? clone(s, { ...def, shape: newShape, catchall: newCatchall }) : s;
       }
       case "array": {
-        const mapped = run(def.element);
+        const mapped = run2(def.element);
         return mapped === def.element ? s : clone(s, { ...def, element: mapped });
       }
       case "tuple": {
@@ -21436,14 +21436,14 @@ function visit(schema, fnOrHandlers) {
         let changed = false;
         const newItems = [];
         for (const item of oldItems) {
-          const mapped = run(item);
+          const mapped = run2(item);
           if (mapped !== item)
             changed = true;
           newItems.push(mapped);
         }
         let newRest = def.rest;
         if (def.rest) {
-          newRest = run(def.rest);
+          newRest = run2(def.rest);
           if (newRest !== def.rest)
             changed = true;
         }
@@ -21451,12 +21451,12 @@ function visit(schema, fnOrHandlers) {
       }
       case "record":
       case "map": {
-        const newKey = run(def.keyType);
-        const newVal = run(def.valueType);
+        const newKey = run2(def.keyType);
+        const newVal = run2(def.valueType);
         return newKey === def.keyType && newVal === def.valueType ? s : clone(s, { ...def, keyType: newKey, valueType: newVal });
       }
       case "set": {
-        const newVal = run(def.valueType);
+        const newVal = run2(def.valueType);
         return newVal === def.valueType ? s : clone(s, { ...def, valueType: newVal });
       }
       case "union": {
@@ -21464,7 +21464,7 @@ function visit(schema, fnOrHandlers) {
         let changed = false;
         const newOptions = [];
         for (const opt of oldOptions) {
-          const mapped = run(opt);
+          const mapped = run2(opt);
           if (mapped !== opt)
             changed = true;
           newOptions.push(mapped);
@@ -21472,8 +21472,8 @@ function visit(schema, fnOrHandlers) {
         return changed ? clone(s, { ...def, options: newOptions }) : s;
       }
       case "intersection": {
-        const newLeft = run(def.left);
-        const newRight = run(def.right);
+        const newLeft = run2(def.left);
+        const newRight = run2(def.right);
         return newLeft === def.left && newRight === def.right ? s : clone(s, { ...def, left: newLeft, right: newRight });
       }
       case "optional":
@@ -21485,23 +21485,23 @@ function visit(schema, fnOrHandlers) {
       case "nonoptional":
       case "promise":
       case "success": {
-        const newInner = run(def.innerType);
+        const newInner = run2(def.innerType);
         return newInner === def.innerType ? s : clone(s, { ...def, innerType: newInner });
       }
       case "pipe": {
-        const newIn = run(def.in);
-        const newOut = run(def.out);
+        const newIn = run2(def.in);
+        const newOut = run2(def.out);
         return newIn === def.in && newOut === def.out ? s : clone(s, { ...def, in: newIn, out: newOut });
       }
       case "function": {
-        const newInput = run(def.input);
-        const newOutput = run(def.output);
+        const newInput = run2(def.input);
+        const newOutput = run2(def.output);
         return newInput === def.input && newOutput === def.output ? s : clone(s, { ...def, input: newInput, output: newOutput });
       }
       case "lazy": {
         const original = def.getter;
         const { _cachedInner, ...rest } = def;
-        return clone(s, { ...rest, getter: () => run(original()) });
+        return clone(s, { ...rest, getter: () => run2(original()) });
       }
       // A leaf by choice: `parts` are regex fragments, not data positions.
       case "template_literal":
@@ -21532,7 +21532,7 @@ function visit(schema, fnOrHandlers) {
       }
     }
   }
-  return run(schema);
+  return run2(schema);
 }
 var RESOLVING;
 var init_visit = __esm({
@@ -22131,8 +22131,8 @@ function iban2(params) {
 function jwt(params) {
   return _jwt(ZodJWT, params);
 }
-function stringFormat(format, fnOrRegex, _params = {}) {
-  return _stringFormat(ZodCustomStringFormat, format, fnOrRegex, _params);
+function stringFormat(format2, fnOrRegex, _params = {}) {
+  return _stringFormat(ZodCustomStringFormat, format2, fnOrRegex, _params);
 }
 function hostname2(_params) {
   return _stringFormat(ZodCustomStringFormat, "hostname", hostname, _params);
@@ -22145,11 +22145,11 @@ function currencyCode2(_params) {
 }
 function hash(alg, params) {
   const enc = params?.enc ?? "hex";
-  const format = `${alg}_${enc}`;
-  const regex = regexes_exports[format];
+  const format2 = `${alg}_${enc}`;
+  const regex = regexes_exports[format2];
   if (!regex)
-    throw new Error(`Unrecognized hash format: ${format}`);
-  return _stringFormat(ZodCustomStringFormat, format, regex, params);
+    throw new Error(`Unrecognized hash format: ${format2}`);
+  return _stringFormat(ZodCustomStringFormat, format2, regex, params);
 }
 function number2(params) {
   return _number(ZodNumber2, params);
@@ -22419,19 +22419,19 @@ function _catch2(innerType, catchValue) {
 function nan(params) {
   return _nan(ZodNaN2, params);
 }
-function pipe(in_, out) {
+function pipe(in_, out2) {
   return new ZodPipe({
     type: "pipe",
     in: in_,
-    out
+    out: out2
     // ...util.normalizeParams(params),
   });
 }
-function codec(in_, out, params) {
+function codec(in_, out2, params) {
   return new ZodCodec({
     type: "pipe",
     in: in_,
-    out,
+    out: out2,
     transform: params.decode,
     reverseTransform: params.encode
   });
@@ -23865,58 +23865,58 @@ function convertBaseSchema(schema, ctx) {
     case "string": {
       let stringSchema = z.string();
       if (schema.format) {
-        const format = schema.format;
-        if (format === "email") {
+        const format2 = schema.format;
+        if (format2 === "email") {
           stringSchema = stringSchema.check(z.email());
-        } else if (format === "uri" || format === "uri-reference") {
+        } else if (format2 === "uri" || format2 === "uri-reference") {
           stringSchema = stringSchema.check(z.url());
-        } else if (format === "uuid" || format === "guid") {
+        } else if (format2 === "uuid" || format2 === "guid") {
           stringSchema = stringSchema.check(z.uuid());
-        } else if (format === "date-time") {
+        } else if (format2 === "date-time") {
           stringSchema = stringSchema.check(z.iso.datetime({ offset: true }));
-        } else if (format === "date") {
+        } else if (format2 === "date") {
           stringSchema = stringSchema.check(z.iso.date());
-        } else if (format === "time") {
+        } else if (format2 === "time") {
           stringSchema = stringSchema.check(z.regex(fullTime));
-        } else if (format === "duration") {
+        } else if (format2 === "duration") {
           stringSchema = stringSchema.check(z.iso.duration());
-        } else if (format === "hostname") {
+        } else if (format2 === "hostname") {
           stringSchema = stringSchema.check(z.hostname());
-        } else if (format === "ipv4") {
+        } else if (format2 === "ipv4") {
           stringSchema = stringSchema.check(z.ipv4());
-        } else if (format === "ipv6") {
+        } else if (format2 === "ipv6") {
           stringSchema = stringSchema.check(z.ipv6());
-        } else if (format === "mac") {
+        } else if (format2 === "mac") {
           stringSchema = stringSchema.check(z.mac());
-        } else if (format === "cidr") {
+        } else if (format2 === "cidr") {
           stringSchema = stringSchema.check(z.cidrv4());
-        } else if (format === "cidr-v6") {
+        } else if (format2 === "cidr-v6") {
           stringSchema = stringSchema.check(z.cidrv6());
-        } else if (format === "base64") {
+        } else if (format2 === "base64") {
           stringSchema = stringSchema.check(z.base64());
-        } else if (format === "base64url") {
+        } else if (format2 === "base64url") {
           stringSchema = stringSchema.check(z.base64url());
-        } else if (format === "e164") {
+        } else if (format2 === "e164") {
           stringSchema = stringSchema.check(z.e164());
-        } else if (format === "credit_card") {
+        } else if (format2 === "credit_card") {
           stringSchema = stringSchema.check(z.creditCard());
-        } else if (format === "iban") {
+        } else if (format2 === "iban") {
           stringSchema = stringSchema.check(z.iban());
-        } else if (format === "jwt") {
+        } else if (format2 === "jwt") {
           stringSchema = stringSchema.check(z.jwt());
-        } else if (format === "emoji") {
+        } else if (format2 === "emoji") {
           stringSchema = stringSchema.check(z.emoji());
-        } else if (format === "nanoid") {
+        } else if (format2 === "nanoid") {
           stringSchema = stringSchema.check(z.nanoid());
-        } else if (format === "cuid") {
+        } else if (format2 === "cuid") {
           stringSchema = stringSchema.check(z.cuid());
-        } else if (format === "cuid2") {
+        } else if (format2 === "cuid2") {
           stringSchema = stringSchema.check(z.cuid2());
-        } else if (format === "ulid") {
+        } else if (format2 === "ulid") {
           stringSchema = stringSchema.check(z.ulid());
-        } else if (format === "xid") {
+        } else if (format2 === "xid") {
           stringSchema = stringSchema.check(z.xid());
-        } else if (format === "ksuid") {
+        } else if (format2 === "ksuid") {
           stringSchema = stringSchema.check(z.ksuid());
         }
       }
@@ -28418,7 +28418,7 @@ var init_protocol = __esm({
               return;
             }
             const pollInterval = task2.pollInterval ?? this._options?.defaultTaskPollInterval ?? 1e3;
-            await new Promise((resolve2) => setTimeout(resolve2, pollInterval));
+            await new Promise((resolve3) => setTimeout(resolve3, pollInterval));
             options?.signal?.throwIfAborted();
           }
         } catch (error62) {
@@ -28435,7 +28435,7 @@ var init_protocol = __esm({
        */
       request(request, resultSchema, options) {
         const { relatedRequestId, resumptionToken, onresumptiontoken, task, relatedTask } = options ?? {};
-        return new Promise((resolve2, reject) => {
+        return new Promise((resolve3, reject) => {
           const earlyReject = (error62) => {
             reject(error62);
           };
@@ -28513,7 +28513,7 @@ var init_protocol = __esm({
               if (!parseResult.success) {
                 reject(parseResult.error);
               } else {
-                resolve2(parseResult.data);
+                resolve3(parseResult.data);
               }
             } catch (error62) {
               reject(error62);
@@ -28775,12 +28775,12 @@ var init_protocol = __esm({
           }
         } catch {
         }
-        return new Promise((resolve2, reject) => {
+        return new Promise((resolve3, reject) => {
           if (signal.aborted) {
             reject(new McpError(ErrorCode.InvalidRequest, "Request cancelled"));
             return;
           }
-          const timeoutId = setTimeout(resolve2, interval);
+          const timeoutId = setTimeout(resolve3, interval);
           signal.addEventListener("abort", () => {
             clearTimeout(timeoutId);
             reject(new McpError(ErrorCode.InvalidRequest, "Request cancelled"));
@@ -31801,22 +31801,22 @@ var require_compile = __commonJS({
       }
     }
     exports.compileSchema = compileSchema;
-    function resolveRef2(root, baseId, ref) {
+    function resolveRef2(root2, baseId, ref) {
       var _a3;
       ref = (0, resolve_1.resolveUrl)(this.opts.uriResolver, baseId, ref);
-      const schOrFunc = root.refs[ref];
+      const schOrFunc = root2.refs[ref];
       if (schOrFunc)
         return schOrFunc;
-      let _sch = resolve2.call(this, root, ref);
+      let _sch = resolve3.call(this, root2, ref);
       if (_sch === void 0) {
-        const schema = (_a3 = root.localRefs) === null || _a3 === void 0 ? void 0 : _a3[ref];
+        const schema = (_a3 = root2.localRefs) === null || _a3 === void 0 ? void 0 : _a3[ref];
         const { schemaId } = this.opts;
         if (schema)
-          _sch = new SchemaEnv({ schema, schemaId, root, baseId });
+          _sch = new SchemaEnv({ schema, schemaId, root: root2, baseId });
       }
       if (_sch === void 0)
         return;
-      return root.refs[ref] = inlineOrCompile.call(this, _sch);
+      return root2.refs[ref] = inlineOrCompile.call(this, _sch);
     }
     exports.resolveRef = resolveRef2;
     function inlineOrCompile(sch) {
@@ -31834,23 +31834,23 @@ var require_compile = __commonJS({
     function sameSchemaEnv(s1, s2) {
       return s1.schema === s2.schema && s1.root === s2.root && s1.baseId === s2.baseId;
     }
-    function resolve2(root, ref) {
+    function resolve3(root2, ref) {
       let sch;
       while (typeof (sch = this.refs[ref]) == "string")
         ref = sch;
-      return sch || this.schemas[ref] || resolveSchema.call(this, root, ref);
+      return sch || this.schemas[ref] || resolveSchema.call(this, root2, ref);
     }
-    function resolveSchema(root, ref) {
+    function resolveSchema(root2, ref) {
       const p = this.opts.uriResolver.parse(ref);
       const refPath = (0, resolve_1._getFullPath)(this.opts.uriResolver, p);
-      let baseId = (0, resolve_1.getFullPath)(this.opts.uriResolver, root.baseId, void 0);
-      if (Object.keys(root.schema).length > 0 && refPath === baseId) {
-        return getJsonPointer.call(this, p, root);
+      let baseId = (0, resolve_1.getFullPath)(this.opts.uriResolver, root2.baseId, void 0);
+      if (Object.keys(root2.schema).length > 0 && refPath === baseId) {
+        return getJsonPointer.call(this, p, root2);
       }
       const id = (0, resolve_1.normalizeId)(refPath);
       const schOrRef = this.refs[id] || this.schemas[id];
       if (typeof schOrRef == "string") {
-        const sch = resolveSchema.call(this, root, schOrRef);
+        const sch = resolveSchema.call(this, root2, schOrRef);
         if (typeof (sch === null || sch === void 0 ? void 0 : sch.schema) !== "object")
           return;
         return getJsonPointer.call(this, p, sch);
@@ -31865,7 +31865,7 @@ var require_compile = __commonJS({
         const schId = schema[schemaId];
         if (schId)
           baseId = (0, resolve_1.resolveUrl)(this.opts.uriResolver, baseId, schId);
-        return new SchemaEnv({ schema, schemaId, root, baseId });
+        return new SchemaEnv({ schema, schemaId, root: root2, baseId });
       }
       return getJsonPointer.call(this, p, schOrRef);
     }
@@ -31877,7 +31877,7 @@ var require_compile = __commonJS({
       "dependencies",
       "definitions"
     ]);
-    function getJsonPointer(parsedRef, { baseId, schema, root }) {
+    function getJsonPointer(parsedRef, { baseId, schema, root: root2 }) {
       var _a3;
       if (((_a3 = parsedRef.fragment) === null || _a3 === void 0 ? void 0 : _a3[0]) !== "/")
         return;
@@ -31896,10 +31896,10 @@ var require_compile = __commonJS({
       let env;
       if (typeof schema != "boolean" && schema.$ref && !(0, util_1.schemaHasRulesButRef)(schema, this.RULES)) {
         const $ref = (0, resolve_1.resolveUrl)(this.opts.uriResolver, baseId, schema.$ref);
-        env = resolveSchema.call(this, root, $ref);
+        env = resolveSchema.call(this, root2, $ref);
       }
       const { schemaId } = this.opts;
-      env = env || new SchemaEnv({ schema, schemaId, root, baseId });
+      env = env || new SchemaEnv({ schema, schemaId, root: root2, baseId });
       if (env.schema !== env.root.schema)
         return env;
       return void 0;
@@ -32664,7 +32664,7 @@ var require_fast_uri = __commonJS({
       }
       return uri;
     }
-    function resolve2(baseURI, relativeURI, options) {
+    function resolve3(baseURI, relativeURI, options) {
       const schemelessOptions = options ? Object.assign({ scheme: "null" }, options) : { scheme: "null" };
       const {
         parsed: baseParsed,
@@ -33033,7 +33033,7 @@ var require_fast_uri = __commonJS({
     var fastUri = {
       SCHEMES,
       normalize,
-      resolve: resolve2,
+      resolve: resolve3,
       resolveComponent,
       equal,
       serialize,
@@ -33338,8 +33338,8 @@ var require_core = __commonJS({
           keyRef = sch;
         if (sch === void 0) {
           const { schemaId } = this.opts;
-          const root = new compile_1.SchemaEnv({ schema: {}, schemaId });
-          sch = compile_1.resolveSchema.call(this, root, keyRef);
+          const root2 = new compile_1.SchemaEnv({ schema: {}, schemaId });
+          sch = compile_1.resolveSchema.call(this, root2, keyRef);
           if (!sch)
             return;
           this.refs[keyRef] = sch;
@@ -33439,16 +33439,16 @@ var require_core = __commonJS({
         return this;
       }
       // Add format
-      addFormat(name, format) {
-        if (typeof format == "string")
-          format = new RegExp(format);
-        this.formats[name] = format;
+      addFormat(name, format2) {
+        if (typeof format2 == "string")
+          format2 = new RegExp(format2);
+        this.formats[name] = format2;
         return this;
       }
       errorsText(errors = this.errors, { separator = ", ", dataVar = "data" } = {}) {
         if (!errors || errors.length === 0)
           return "No errors";
-        return errors.map((e) => `${dataVar}${e.instancePath} ${e.message}`).reduce((text2, msg) => text2 + separator + msg);
+        return errors.map((e) => `${dataVar}${e.instancePath} ${e.message}`).reduce((text3, msg) => text3 + separator + msg);
       }
       $dataMetaSchema(metaSchema, keywordsJsonPointers) {
         const rules = this.RULES.all;
@@ -33560,9 +33560,9 @@ var require_core = __commonJS({
     }
     function addInitialFormats() {
       for (const name in this.opts.formats) {
-        const format = this.opts.formats[name];
-        if (format)
-          this.addFormat(name, format);
+        const format2 = this.opts.formats[name];
+        if (format2)
+          this.addFormat(name, format2);
       }
     }
     function addInitialKeywords(defs) {
@@ -33700,20 +33700,20 @@ var require_ref = __commonJS({
       code(cxt) {
         const { gen, schema: $ref, it } = cxt;
         const { baseId, schemaEnv: env, validateName, opts, self } = it;
-        const { root } = env;
-        if (($ref === "#" || $ref === "#/") && baseId === root.baseId)
+        const { root: root2 } = env;
+        if (($ref === "#" || $ref === "#/") && baseId === root2.baseId)
           return callRootRef();
-        const schOrEnv = compile_1.resolveRef.call(self, root, baseId, $ref);
+        const schOrEnv = compile_1.resolveRef.call(self, root2, baseId, $ref);
         if (schOrEnv === void 0)
           throw new ref_error_1.default(it.opts.uriResolver, baseId, $ref);
         if (schOrEnv instanceof compile_1.SchemaEnv)
           return callValidate(schOrEnv);
         return inlineRefSchema(schOrEnv);
         function callRootRef() {
-          if (env === root)
+          if (env === root2)
             return callRef(cxt, validateName, env, env.$async);
-          const rootName = gen.scopeValue("root", { ref: root });
-          return callRef(cxt, (0, codegen_1._)`${rootName}.validate`, root, root.$async);
+          const rootName = gen.scopeValue("root", { ref: root2 });
+          return callRef(cxt, (0, codegen_1._)`${rootName}.validate`, root2, root2.$async);
         }
         function callValidate(sch) {
           const v = getValidate(cxt, sch);
@@ -35245,18 +35245,18 @@ var require_format = __commonJS({
           });
           const fDef = gen.const("fDef", (0, codegen_1._)`${fmts}[${schemaCode}]`);
           const fType = gen.let("fType");
-          const format = gen.let("format");
-          gen.if((0, codegen_1._)`typeof ${fDef} == "object" && !(${fDef} instanceof RegExp)`, () => gen.assign(fType, (0, codegen_1._)`${fDef}.type || "string"`).assign(format, (0, codegen_1._)`${fDef}.validate`), () => gen.assign(fType, (0, codegen_1._)`"string"`).assign(format, fDef));
+          const format2 = gen.let("format");
+          gen.if((0, codegen_1._)`typeof ${fDef} == "object" && !(${fDef} instanceof RegExp)`, () => gen.assign(fType, (0, codegen_1._)`${fDef}.type || "string"`).assign(format2, (0, codegen_1._)`${fDef}.validate`), () => gen.assign(fType, (0, codegen_1._)`"string"`).assign(format2, fDef));
           cxt.fail$data((0, codegen_1.or)(unknownFmt(), invalidFmt()));
           function unknownFmt() {
             if (opts.strictSchema === false)
               return codegen_1.nil;
-            return (0, codegen_1._)`${schemaCode} && !${format}`;
+            return (0, codegen_1._)`${schemaCode} && !${format2}`;
           }
           function invalidFmt() {
-            const callFormat = schemaEnv.$async ? (0, codegen_1._)`(${fDef}.async ? await ${format}(${data}) : ${format}(${data}))` : (0, codegen_1._)`${format}(${data})`;
-            const validData = (0, codegen_1._)`(typeof ${format} == "function" ? ${callFormat} : ${format}.test(${data}))`;
-            return (0, codegen_1._)`${format} && ${format} !== true && ${fType} === ${ruleType} && !${validData}`;
+            const callFormat = schemaEnv.$async ? (0, codegen_1._)`(${fDef}.async ? await ${format2}(${data}) : ${format2}(${data}))` : (0, codegen_1._)`${format2}(${data})`;
+            const validData = (0, codegen_1._)`(typeof ${format2} == "function" ? ${callFormat} : ${format2}.test(${data}))`;
+            return (0, codegen_1._)`${format2} && ${format2} !== true && ${fType} === ${ruleType} && !${validData}`;
           }
         }
         function validateFormat() {
@@ -35267,7 +35267,7 @@ var require_format = __commonJS({
           }
           if (formatDef === true)
             return;
-          const [fmtType, format, fmtRef] = getFormat(formatDef);
+          const [fmtType, format2, fmtRef] = getFormat(formatDef);
           if (fmtType === ruleType)
             cxt.pass(validCondition());
           function unknownFormat() {
@@ -35294,7 +35294,7 @@ var require_format = __commonJS({
                 throw new Error("async format in sync schema");
               return (0, codegen_1._)`await ${fmtRef}(${data})`;
             }
-            return typeof format == "function" ? (0, codegen_1._)`${fmtRef}(${data})` : (0, codegen_1._)`${fmtRef}.test(${data})`;
+            return typeof format2 == "function" ? (0, codegen_1._)`${fmtRef}(${data})` : (0, codegen_1._)`${fmtRef}.test(${data})`;
           }
         }
       }
@@ -35309,8 +35309,8 @@ var require_format2 = __commonJS({
     "use strict";
     Object.defineProperty(exports, "__esModule", { value: true });
     var format_1 = require_format();
-    var format = [format_1.default];
-    exports.default = format;
+    var format2 = [format_1.default];
+    exports.default = format2;
   }
 });
 
@@ -35952,17 +35952,17 @@ var require_limit = __commonJS({
           cxt.fail$data((0, codegen_1.or)((0, codegen_1._)`typeof ${fmt} != "object"`, (0, codegen_1._)`${fmt} instanceof RegExp`, (0, codegen_1._)`typeof ${fmt}.compare != "function"`, compareCode(fmt)));
         }
         function validateFormat() {
-          const format = fCxt.schema;
-          const fmtDef = self.formats[format];
+          const format2 = fCxt.schema;
+          const fmtDef = self.formats[format2];
           if (!fmtDef || fmtDef === true)
             return;
           if (typeof fmtDef != "object" || fmtDef instanceof RegExp || typeof fmtDef.compare != "function") {
-            throw new Error(`"${keyword}": format "${format}" does not define "compare" function`);
+            throw new Error(`"${keyword}": format "${format2}" does not define "compare" function`);
           }
           const fmt = gen.scopeValue("formats", {
-            key: format,
+            key: format2,
             ref: fmtDef,
-            code: opts.code.formats ? (0, codegen_1._)`${opts.code.formats}${(0, codegen_1.getProperty)(format)}` : void 0
+            code: opts.code.formats ? (0, codegen_1._)`${opts.code.formats}${(0, codegen_1.getProperty)(format2)}` : void 0
           });
           cxt.fail$data(compareCode(fmt));
         }
@@ -37191,7 +37191,7 @@ var init_mcp = __esm({
         let task = createTaskResult.task;
         const pollInterval = task.pollInterval ?? 5e3;
         while (task.status !== "completed" && task.status !== "failed" && task.status !== "cancelled") {
-          await new Promise((resolve2) => setTimeout(resolve2, pollInterval));
+          await new Promise((resolve3) => setTimeout(resolve3, pollInterval));
           const updatedTask = await extra.taskStore.getTask(taskId);
           if (!updatedTask) {
             throw new McpError(ErrorCode.InternalError, `Task ${taskId} not found during polling`);
@@ -37800,12 +37800,12 @@ var init_stdio2 = __esm({
         this.onclose?.();
       }
       send(message) {
-        return new Promise((resolve2) => {
+        return new Promise((resolve3) => {
           const json2 = serializeMessage(message);
           if (this._stdout.write(json2)) {
-            resolve2();
+            resolve3();
           } else {
-            this._stdout.once("drain", resolve2);
+            this._stdout.once("drain", resolve3);
           }
         });
       }
@@ -37813,11 +37813,71 @@ var init_stdio2 = __esm({
   }
 });
 
+// src/lib/ignore.ts
+function createIgnore(extra) {
+  const set2 = new Set(DEFAULT_IGNORES);
+  for (const entry of extra ?? []) {
+    const name = entry.trim().replace(/\/+$/, "");
+    if (name) set2.add(name);
+  }
+  return set2;
+}
+function isIgnored(relativePath, ignore) {
+  if (ignore.size === 0) return false;
+  for (const segment of relativePath.split("/")) {
+    if (segment && ignore.has(segment)) return true;
+  }
+  return false;
+}
+var DEFAULT_IGNORES;
+var init_ignore = __esm({
+  "src/lib/ignore.ts"() {
+    "use strict";
+    DEFAULT_IGNORES = [
+      "node_modules",
+      ".git",
+      ".hg",
+      ".svn",
+      ".DS_Store",
+      "dist",
+      "build",
+      "out",
+      ".next",
+      ".nuxt",
+      ".svelte-kit",
+      ".turbo",
+      ".cache",
+      ".parcel-cache",
+      ".vercel",
+      ".netlify",
+      "target",
+      "vendor",
+      "__pycache__",
+      ".venv",
+      "venv",
+      ".mypy_cache",
+      ".pytest_cache",
+      ".ruff_cache",
+      "coverage",
+      ".nyc_output",
+      ".idea",
+      ".gradle",
+      ".terraform",
+      "Pods",
+      "DerivedData",
+      ".expo",
+      ".dart_tool",
+      ".pnpm-store",
+      ".yarn"
+    ];
+  }
+});
+
 // src/memory/core.ts
-function parseGraph(text2) {
-  if (!text2) return emptyGraph();
+function parseGraph(text3) {
+  if (!text3) return emptyGraph();
   try {
-    const data = JSON.parse(text2);
+    const data = JSON.parse(text3);
     if (Array.isArray(data?.nodes) && Array.isArray(data?.edges)) return { version: 1, nodes: data.nodes, edges: data.edges };
   } catch {
   }
@@ -37875,8 +37935,8 @@ function search(graph, query, limit) {
   const words = query.toLowerCase().split(/\W+/).filter((w) => w.length > 1);
   if (words.length === 0) return [];
   const score = (node2) => {
-    const text2 = [node2.title, node2.why, ...node2.tags ?? [], ...neighbors(graph, node2.id).map((n) => n.title)].join(" ").toLowerCase();
-    return words.reduce((sum, w) => sum + (text2.includes(w) ? 1 : 0), 0);
+    const text3 = [node2.title, node2.why, ...node2.tags ?? [], ...neighbors(graph, node2.id).map((n) => n.title)].join(" ").toLowerCase();
+    return words.reduce((sum, w) => sum + (text3.includes(w) ? 1 : 0), 0);
   };
   return graph.nodes.filter((n) => n.kind !== "file").map((n) => ({ n, s: score(n) })).filter((x) => x.s > 0).sort((a, b) => b.s - a.s || b.n.at - a.n.at).slice(0, limit).map((x) => x.n);
 }
@@ -37902,35 +37962,35 @@ var init_core3 = __esm({
 import { execFileSync } from "node:child_process";
 import { mkdirSync, readFileSync, writeFileSync } from "node:fs";
 import { dirname, join } from "node:path";
-function loadGraph(root) {
+function loadGraph(root2) {
   try {
-    return parseGraph(readFileSync(graphPath(root), "utf8"));
+    return parseGraph(readFileSync(graphPath(root2), "utf8"));
   } catch {
     return parseGraph(void 0);
   }
 }
-function saveGraph(root, graph) {
-  const file2 = graphPath(root);
+function saveGraph(root2, graph) {
+  const file2 = graphPath(root2);
   mkdirSync(dirname(file2), { recursive: true });
   writeFileSync(file2, JSON.stringify(graph, null, 2) + "\n");
 }
-function git(root, ...args) {
+function git(root2, ...args) {
   try {
-    return execFileSync("git", ["-C", root, ...args], { encoding: "utf8", stdio: ["ignore", "pipe", "ignore"] }).trim();
+    return execFileSync("git", ["-C", root2, ...args], { encoding: "utf8", stdio: ["ignore", "pipe", "ignore"] }).trim();
   } catch {
     return void 0;
   }
 }
-function staleMap(root, graph) {
-  const out = {};
+function staleMap(root2, graph) {
+  const out2 = {};
   for (const node2 of graph.nodes) {
     if (!node2.sha || node2.kind === "file" || node2.kind === "session") continue;
     const files = neighbors(graph, node2.id).filter((n) => n.kind === "file").map((n) => n.title);
     if (files.length === 0) continue;
-    const count = Number(git(root, "rev-list", "--count", `${node2.sha}..HEAD`, "--", ...files) ?? 0);
-    if (count > 0) out[node2.id] = count;
+    const count = Number(git(root2, "rev-list", "--count", `${node2.sha}..HEAD`, "--", ...files) ?? 0);
+    if (count > 0) out2[node2.id] = count;
   }
-  return out;
+  return out2;
 }
 var memoryRoot, graphPath, headSha;
 var init_store = __esm({
@@ -37938,8 +37998,8 @@ var init_store = __esm({
     "use strict";
     init_core3();
     memoryRoot = () => process.env.MEMORY_ROOT ?? process.cwd();
-    graphPath = (root) => join(root, ".memory", "graph.json");
-    headSha = (root) => git(root, "rev-parse", "HEAD");
+    graphPath = (root2) => join(root2, ".memory", "graph.json");
+    headSha = (root2) => git(root2, "rev-parse", "HEAD");
   }
 });
 
@@ -37949,7 +38009,7 @@ __export(server_exports, {
   serve: () => serve
 });
 async function serve() {
-  const root = memoryRoot();
+  const root2 = memoryRoot();
   const server2 = new McpServer({ name: "project-memory", version: "0.1.0" });
   server2.registerTool(
     "remember",
@@ -37965,9 +38025,9 @@ async function serve() {
       }
     },
     async (input2) => {
-      const graph = loadGraph(root);
-      const node2 = remember(graph, { ...input2, at: Date.now(), sha: headSha(root) });
-      saveGraph(root, graph);
+      const graph = loadGraph(root2);
+      const node2 = remember(graph, { ...input2, at: Date.now(), sha: headSha(root2) });
+      saveGraph(root2, graph);
       return text(`Saved ${node2.kind} ${node2.id}.`);
     }
   );
@@ -37978,10 +38038,10 @@ async function serve() {
       inputSchema: { query: external_exports.string().min(2), limit: external_exports.number().int().min(1).max(20).optional() }
     },
     async ({ query, limit = 5 }) => {
-      const graph = loadGraph(root);
+      const graph = loadGraph(root2);
       const hits = search(graph, query, limit);
       if (hits.length === 0) return text(`No memories match "${query}".`);
-      const stale = staleMap(root, graph);
+      const stale = staleMap(root2, graph);
       return text(hits.map((n) => describe3(graph, n, stale)).join("\n\n"));
     }
   );
@@ -37992,10 +38052,10 @@ async function serve() {
       inputSchema: { path: external_exports.string().describe("Project-relative path.") }
     },
     async ({ path }) => {
-      const graph = loadGraph(root);
+      const graph = loadGraph(root2);
       const file2 = graph.nodes.find((n) => n.id === `file:${path}`);
       if (!file2) return text(`Nothing remembered about ${path}.`);
-      const stale = staleMap(root, graph);
+      const stale = staleMap(root2, graph);
       const related = neighbors(graph, file2.id).sort((a, b) => b.at - a.at);
       return text(related.map((n) => describe3(graph, n, stale)).join("\n\n") || `Nothing remembered about ${path}.`);
     }
@@ -38007,10 +38067,10 @@ async function serve() {
       inputSchema: { summary: external_exports.string().min(3), files: external_exports.array(external_exports.string()).optional() }
     },
     async ({ summary, files = [] }) => {
-      const graph = loadGraph(root);
+      const graph = loadGraph(root2);
       const now = Date.now();
-      const node2 = recordSession(graph, new Date(now).toISOString().slice(0, 10), files, now, summary, headSha(root));
-      saveGraph(root, graph);
+      const node2 = recordSession(graph, new Date(now).toISOString().slice(0, 10), files, now, summary, headSha(root2));
+      saveGraph(root2, graph);
       return text(`Logged to ${node2.id}.`);
     }
   );
@@ -38021,10 +38081,10 @@ async function serve() {
       inputSchema: { from: external_exports.string(), to: external_exports.string(), type: external_exports.string().optional().describe("e.g. relates, supersedes, continues") }
     },
     async ({ from, to, type = "relates" }) => {
-      const graph = loadGraph(root);
+      const graph = loadGraph(root2);
       if (![from, to].every((id) => graph.nodes.some((n) => n.id === id))) return text("Unknown id \u2014 use ids from recall.", true);
       link(graph, from, to, type);
-      saveGraph(root, graph);
+      saveGraph(root2, graph);
       return text(`Linked ${from} \u2192 ${to} (${type}).`);
     }
   );
@@ -38032,8 +38092,8 @@ async function serve() {
     "stale_memories",
     { description: "Memories whose linked files have changed since they were recorded \u2014 candidates to re-check or forget.", inputSchema: {} },
     async () => {
-      const graph = loadGraph(root);
-      const stale = staleMap(root, graph);
+      const graph = loadGraph(root2);
+      const stale = staleMap(root2, graph);
       const nodes = graph.nodes.filter((n) => stale[n.id]);
       return text(nodes.length ? nodes.map((n) => describe3(graph, n, stale)).join("\n\n") : "No stale memories.");
     }
@@ -38042,9 +38102,9 @@ async function serve() {
     "forget",
     { description: "Delete a memory by id (and its links).", inputSchema: { id: external_exports.string() } },
     async ({ id }) => {
-      const graph = loadGraph(root);
+      const graph = loadGraph(root2);
       const gone = forget(graph, id);
-      if (gone) saveGraph(root, graph);
+      if (gone) saveGraph(root2, graph);
       return text(gone ? `Forgot ${id}.` : `No memory ${id}.`, !gone);
     }
   );
@@ -38063,31 +38123,470 @@ var init_server3 = __esm({
   }
 });
 
+// src/doctor/semver.ts
+function parseVersion(text3) {
+  const m = /(\d+)(?:\.(\d+))?(?:\.(\d+))?/.exec(text3);
+  return m ? [Number(m[1]), Number(m[2] ?? 0), Number(m[3] ?? 0)] : void 0;
+}
+function satisfiesOne(version2, comp) {
+  const m = /^(>=|<=|>|<|=|\^|~)?\s*v?(\d+|[xX*])(?:\.(\d+|[xX*]))?(?:\.(\d+|[xX*]))?/.exec(comp);
+  if (!m) return void 0;
+  const op = m[1] ?? "";
+  const wild = (s) => s === void 0 || /[xX*]/.test(s);
+  const base = [Number(m[2]) || 0, Number(m[3]) || 0, Number(m[4]) || 0];
+  if (/[xX*]/.test(m[2])) return true;
+  const c = cmp(version2, base);
+  switch (op) {
+    case ">=":
+      return c >= 0;
+    case ">":
+      return c > 0;
+    case "<=":
+      return c <= 0;
+    case "<":
+      return c < 0;
+    case "^":
+      return c >= 0 && (base[0] > 0 ? version2[0] === base[0] : version2[1] === base[1]);
+    case "~":
+      return c >= 0 && version2[0] === base[0] && version2[1] === base[1];
+    default:
+      return version2[0] === base[0] && (wild(m[3]) || version2[1] === base[1]) && (wild(m[4]) || version2[2] === base[2]);
+  }
+}
+function satisfies(version2, range) {
+  const v = parseVersion(version2);
+  if (!v) return void 0;
+  const alternatives = range.split("||").map((part) => part.trim());
+  let understood = false;
+  for (const alt of alternatives) {
+    const results = alt.replace(/(>=|<=|>|<|=|\^|~)\s+/g, "$1").split(/\s+/).filter(Boolean).map((c) => satisfiesOne(v, c));
+    if (results.every((r) => r !== void 0)) understood = true;
+    if (results.length > 0 && results.every((r) => r === true)) return true;
+  }
+  return understood ? false : void 0;
+}
+var cmp;
+var init_semver = __esm({
+  "src/doctor/semver.ts"() {
+    "use strict";
+    cmp = (a, b) => a[0] - b[0] || a[1] - b[1] || a[2] - b[2];
+  }
+});
+
+// src/doctor/checks.ts
+import { execFile } from "node:child_process";
+import { existsSync, readdirSync, readFileSync as readFileSync2, statSync } from "node:fs";
+import { createServer } from "node:net";
+import { join as join2 } from "node:path";
+import { promisify } from "node:util";
+async function out(cmd, args, timeout = 4e3) {
+  try {
+    const r = await run(cmd, args, { timeout });
+    return `${r.stdout}${r.stderr}`.trim();
+  } catch {
+    return void 0;
+  }
+}
+function requirements(root2) {
+  const reqs = [];
+  const pkg = read(join2(root2, "package.json"));
+  if (pkg) {
+    try {
+      const engines = JSON.parse(pkg).engines ?? {};
+      for (const tool of Object.keys(engines)) reqs.push({ tool, range: String(engines[tool]), source: "package.json engines" });
+    } catch {
+    }
+  }
+  const nvm = (read(join2(root2, ".nvmrc")) ?? read(join2(root2, ".node-version")))?.trim();
+  if (nvm && !reqs.some((r) => r.tool === "node") && /\d/.test(nvm)) reqs.push({ tool: "node", range: nvm.replace(/^v/, ""), source: ".nvmrc" });
+  const py = (read(join2(root2, ".python-version")) ?? "").trim();
+  if (py) reqs.push({ tool: "python", range: py, source: ".python-version" });
+  const pyproject = read(join2(root2, "pyproject.toml"))?.match(/requires-python\s*=\s*"([^"]+)"/);
+  if (pyproject) reqs.push({ tool: "python", range: pyproject[1], source: "pyproject.toml" });
+  const gomod = read(join2(root2, "go.mod"))?.match(/^go\s+(\d+(?:\.\d+)*)/m);
+  if (gomod) reqs.push({ tool: "go", range: `>=${gomod[1]}`, source: "go.mod" });
+  const rust = read(join2(root2, "Cargo.toml"))?.match(/rust-version\s*=\s*"([^"]+)"/);
+  if (rust) reqs.push({ tool: "rust", range: `>=${rust[1]}`, source: "Cargo.toml" });
+  return reqs;
+}
+async function checkTools(root2) {
+  const findings = [];
+  const reqs = requirements(root2);
+  const need = new Set(reqs.map((r) => r.tool));
+  if (existsSync(join2(root2, "Dockerfile")) || existsSync(join2(root2, "docker-compose.yml")) || existsSync(join2(root2, "compose.yaml"))) need.add("docker");
+  const lock = ["pnpm-lock.yaml", "yarn.lock", "package-lock.json"].find((f) => existsSync(join2(root2, f)));
+  if (lock) need.add(lock === "pnpm-lock.yaml" ? "pnpm" : lock === "yarn.lock" ? "yarn" : "npm");
+  if (existsSync(join2(root2, ".git"))) need.add("git");
+  for (const tool of need) {
+    const probe = PROBES[tool];
+    if (!probe) continue;
+    const raw = await out(probe[0], probe[1]);
+    if (raw === void 0) {
+      findings.push({ level: "fail", title: `${tool} is not installed`, fix: `Install ${tool} and make sure it is on PATH.` });
+      continue;
+    }
+    const version2 = parseVersion(raw)?.join(".") ?? raw;
+    for (const req of reqs.filter((r) => r.tool === tool)) {
+      const ok = satisfies(version2, req.range);
+      if (ok === false) {
+        findings.push({
+          level: "fail",
+          title: `${tool} ${version2} does not satisfy "${req.range}"`,
+          detail: `required by ${req.source}`,
+          fix: tool === "node" ? "Switch versions (nvm use / fnm use / volta) to one matching the requirement." : `Install a ${tool} version matching ${req.range}.`
+        });
+      } else if (ok === void 0) {
+        findings.push({ level: "info", title: `${tool} ${version2}`, detail: `could not compare with "${req.range}" (${req.source})` });
+      } else findings.push({ level: "ok", title: `${tool} ${version2}`, detail: `satisfies "${req.range}" (${req.source})` });
+    }
+    if (!reqs.some((r) => r.tool === tool)) findings.push({ level: "ok", title: `${tool} ${version2}` });
+  }
+  const pm = (() => {
+    try {
+      return JSON.parse(read(join2(root2, "package.json")) ?? "{}").packageManager;
+    } catch {
+      return void 0;
+    }
+  })();
+  if (pm) {
+    const name = pm.split("@")[0];
+    if (lock && !lock.startsWith(name === "yarn" ? "yarn" : name === "pnpm" ? "pnpm" : "package")) {
+      findings.push({ level: "warn", title: `packageManager is ${pm} but the lockfile is ${lock}`, fix: `Use ${name} (or fix the mismatch).` });
+    }
+  }
+  return findings;
+}
+function checkDeps(root2) {
+  const pkgText = read(join2(root2, "package.json"));
+  if (!pkgText) return [];
+  let pkg;
+  try {
+    pkg = JSON.parse(pkgText);
+  } catch {
+    return [{ level: "fail", title: "package.json is not valid JSON" }];
+  }
+  const names = Object.keys({ ...pkg.dependencies, ...pkg.devDependencies });
+  if (names.length === 0) return [];
+  const modules = join2(root2, "node_modules");
+  if (!existsSync(modules)) return [{ level: "fail", title: "node_modules is missing", fix: "Run your package manager's install." }];
+  const missing = names.filter((n) => !existsSync(join2(modules, n)));
+  if (missing.length) {
+    return [{ level: "fail", title: `${missing.length} dependenc${missing.length === 1 ? "y is" : "ies are"} not installed`, detail: missing.slice(0, 8).join(", "), fix: "Run your package manager's install." }];
+  }
+  const lock = ["pnpm-lock.yaml", "yarn.lock", "package-lock.json"].map((f) => join2(root2, f)).find(existsSync);
+  if (lock && statSync(lock).mtimeMs > statSync(modules).mtimeMs + 1e3) {
+    return [{ level: "warn", title: "lockfile is newer than node_modules", detail: "dependencies may be out of date", fix: "Re-run install." }];
+  }
+  return [{ level: "ok", title: `${names.length} dependencies installed` }];
+}
+function projectPorts(root2) {
+  const found = /* @__PURE__ */ new Set();
+  const add = (n) => Number.isInteger(n) && n > 0 && n < 65536 && found.add(n);
+  for (const file2 of [".env", ".env.example", ".env.local"]) {
+    for (const m of read(join2(root2, file2))?.matchAll(/^\s*(?:\w*PORT)\s*=\s*(\d+)/gim) ?? []) add(Number(m[1]));
+  }
+  for (const file2 of ["docker-compose.yml", "docker-compose.yaml", "compose.yaml", "compose.yml"]) {
+    for (const m of read(join2(root2, file2))?.matchAll(/["']?(\d{2,5}):\d{2,5}["']?/g) ?? []) add(Number(m[1]));
+  }
+  for (const m of read(join2(root2, "package.json"))?.matchAll(/(?:--port|-p|PORT=)\s*=?\s*(\d{2,5})/g) ?? []) add(Number(m[1]));
+  return found.size ? [...found] : COMMON_PORTS;
+}
+function inUse(port) {
+  return new Promise((resolve3) => {
+    const server2 = createServer();
+    server2.once("error", (e) => resolve3(e.code === "EADDRINUSE"));
+    server2.once("listening", () => server2.close(() => resolve3(false)));
+    server2.listen(port, "127.0.0.1");
+  });
+}
+async function who(port) {
+  const raw = await out("lsof", ["-nP", `-iTCP:${port}`, "-sTCP:LISTEN", "-Fpc"]);
+  if (!raw) return void 0;
+  const pid = /^p(\d+)/m.exec(raw)?.[1];
+  const cmd = /^c(.+)$/m.exec(raw)?.[1];
+  return pid ? `${cmd ?? "process"} (pid ${pid})` : void 0;
+}
+async function checkPorts(ports) {
+  const valid = [...new Set(ports.filter((p) => Number.isInteger(p) && p > 0 && p < 65536))].slice(0, 30);
+  const results = await Promise.all(valid.map(async (p) => ({ p, busy: await inUse(p) })));
+  const findings = [];
+  for (const { p, busy } of results) {
+    if (!busy) continue;
+    const owner = await who(p);
+    findings.push({
+      level: "warn",
+      title: `port ${p} is in use`,
+      detail: owner ? `held by ${owner}` : void 0,
+      fix: owner ? `Stop it, or run this project on another port. (If that process IS this project, it is already running.)` : "Free the port or use another one."
+    });
+  }
+  const free = results.filter((r) => !r.busy).map((r) => r.p);
+  if (free.length) findings.push({ level: "ok", title: `ports free: ${free.join(", ")}` });
+  return findings;
+}
+function dotenvNames(path) {
+  const text3 = read(path);
+  if (text3 === void 0) return void 0;
+  const names = /* @__PURE__ */ new Set();
+  for (const line of text3.split("\n")) {
+    const m = /^\s*(?:export\s+)?([A-Za-z_][A-Za-z0-9_]*)\s*=/.exec(line);
+    if (m) names.add(m[1]);
+  }
+  return names;
+}
+function usedVars(root2) {
+  const ignore = createIgnore();
+  const used = /* @__PURE__ */ new Map();
+  let files = 0;
+  const walk = (rel) => {
+    let entries;
+    try {
+      entries = readdirSync(join2(root2, rel), { withFileTypes: true });
+    } catch {
+      return;
+    }
+    for (const entry of entries) {
+      if (files >= 3e3) return;
+      const path = rel ? `${rel}/${entry.name}` : entry.name;
+      if (isIgnored(path, ignore)) continue;
+      if (entry.isDirectory()) walk(path);
+      else if (CODE_EXT.test(entry.name)) {
+        files += 1;
+        const full = join2(root2, path);
+        try {
+          if (statSync(full).size > 2e5) continue;
+        } catch {
+          continue;
+        }
+        const text3 = read(full) ?? "";
+        for (const pattern of VAR_PATTERNS) {
+          for (const m of text3.matchAll(pattern)) if (!used.has(m[1])) used.set(m[1], path);
+        }
+      }
+    }
+  };
+  walk("");
+  return used;
+}
+function checkEnv(root2) {
+  const findings = [];
+  const env = dotenvNames(join2(root2, ".env"));
+  const example = dotenvNames(join2(root2, ".env.example")) ?? dotenvNames(join2(root2, ".env.sample"));
+  if (example && !env) {
+    findings.push({ level: "fail", title: ".env is missing", detail: `.env.example lists ${example.size} variables`, fix: "Copy .env.example to .env and fill in the values." });
+  } else if (example && env) {
+    const missing = [...example].filter((n) => !env.has(n) && !(n in process.env));
+    if (missing.length) {
+      findings.push({ level: "fail", title: `${missing.length} variable${missing.length === 1 ? "" : "s"} in .env.example ${missing.length === 1 ? "is" : "are"} not set`, detail: missing.slice(0, 12).join(", "), fix: "Add them to .env (names only shown here; values are never read)." });
+    }
+  }
+  const defined = /* @__PURE__ */ new Set([...env ?? [], ...example ?? [], ...Object.keys(process.env)]);
+  for (const file2 of [".env.local", ".env.development"]) for (const n of dotenvNames(join2(root2, file2)) ?? []) defined.add(n);
+  const unset = [...usedVars(root2)].filter(([name]) => !defined.has(name) && !IGNORED_VARS.has(name));
+  if (unset.length) {
+    findings.push({
+      level: "warn",
+      title: `${unset.length} variable${unset.length === 1 ? " is" : "s are"} read in code but not defined anywhere`,
+      detail: unset.slice(0, 10).map(([n, f]) => `${n} (${f})`).join(", "),
+      fix: "Define them in .env, or ignore them if they have defaults in code."
+    });
+  }
+  if (findings.length === 0 && (env || example)) findings.push({ level: "ok", title: "environment variables look complete" });
+  return findings;
+}
+async function checkDocker(root2) {
+  const uses = ["Dockerfile", "docker-compose.yml", "docker-compose.yaml", "compose.yaml", "compose.yml"].some((f) => existsSync(join2(root2, f)));
+  if (!uses) return [];
+  const info = await out("docker", ["info", "--format", "{{.ServerVersion}}"], 6e3);
+  if (info === void 0) return [];
+  if (/cannot connect|is the docker daemon running/i.test(info)) {
+    return [{ level: "fail", title: "Docker is installed but the daemon is not running", fix: "Start Docker Desktop (or `sudo systemctl start docker`)." }];
+  }
+  return [{ level: "ok", title: `Docker daemon running (${info})` }];
+}
+function explain(errorText) {
+  const hits = PATTERNS.filter((p) => p.re.test(errorText));
+  if (hits.length === 0) return "No known pattern matched. Run `diagnose` for a full health check.";
+  return hits.map((h) => `\u2022 ${h.cause}
+  next: ${h.next}`).join("\n");
+}
+function format(title, findings) {
+  if (findings.length === 0) return `${title}
+  nothing to check here.`;
+  const lines = [title];
+  for (const f of findings) {
+    lines.push(`  ${ICON[f.level]} ${f.title}${f.detail ? ` \u2014 ${f.detail}` : ""}`);
+    if (f.fix && f.level !== "ok") lines.push(`      fix: ${f.fix}`);
+  }
+  return lines.join("\n");
+}
+async function diagnose(root2) {
+  const sections = [
+    ["Tools", await checkTools(root2)],
+    ["Dependencies", checkDeps(root2)],
+    ["Environment variables", checkEnv(root2)],
+    ["Ports", await checkPorts(projectPorts(root2))],
+    ["Docker", await checkDocker(root2)]
+  ];
+  const all = sections.flatMap(([, f]) => f);
+  const failures = all.filter((f) => f.level === "fail").length;
+  const warnings = all.filter((f) => f.level === "warn").length;
+  const head = failures + warnings === 0 ? "\u2714 No problems found." : `${failures} problem(s), ${warnings} warning(s).`;
+  return { text: [head, ...sections.filter(([, f]) => f.length).map(([t, f]) => format(t, f))].join("\n\n"), failures, warnings };
+}
+var run, read, PROBES, COMMON_PORTS, IGNORED_VARS, CODE_EXT, VAR_PATTERNS, PATTERNS, ICON;
+var init_checks4 = __esm({
+  "src/doctor/checks.ts"() {
+    "use strict";
+    init_ignore();
+    init_semver();
+    run = promisify(execFile);
+    read = (path) => {
+      try {
+        return readFileSync2(path, "utf8");
+      } catch {
+        return void 0;
+      }
+    };
+    PROBES = {
+      node: ["node", ["-v"]],
+      npm: ["npm", ["-v"]],
+      pnpm: ["pnpm", ["-v"]],
+      yarn: ["yarn", ["-v"]],
+      python: ["python3", ["--version"]],
+      go: ["go", ["version"]],
+      rust: ["rustc", ["--version"]],
+      docker: ["docker", ["--version"]],
+      git: ["git", ["--version"]]
+    };
+    COMMON_PORTS = [3e3, 5173, 8e3, 8080, 5432, 6379, 27017, 3306];
+    IGNORED_VARS = /* @__PURE__ */ new Set(["NODE_ENV", "PATH", "HOME", "PWD", "CI", "USER", "SHELL", "TERM", "LANG", "TZ", "DEBUG", "PORT_FALLBACK"]);
+    CODE_EXT = /\.(?:[cm]?[jt]sx?|py|go|rb|php|vue|svelte)$/;
+    VAR_PATTERNS = [
+      /process\.env\.([A-Z][A-Z0-9_]+)/g,
+      /process\.env\[\s*["']([A-Z][A-Z0-9_]+)["']\s*\]/g,
+      /import\.meta\.env\.([A-Z][A-Z0-9_]+)/g,
+      /os\.environ(?:\.get)?[[(]\s*["']([A-Z][A-Z0-9_]+)["']/g,
+      /os\.getenv\(\s*["']([A-Z][A-Z0-9_]+)["']/g,
+      /os\.Getenv\(\s*"([A-Z][A-Z0-9_]+)"\)/g
+    ];
+    PATTERNS = [
+      { re: /EADDRINUSE.*?(\d{2,5})/i, cause: "A port is already taken by another process.", next: "check_ports with that port" },
+      { re: /Cannot find module|MODULE_NOT_FOUND/i, cause: "A dependency is missing or not installed.", next: "check_deps" },
+      { re: /Unsupported engine|engine "node"|requires Node|SyntaxError: Unexpected token '\?/i, cause: "The node version doesn't match what the project (or a dependency) needs.", next: "check_tools" },
+      { re: /ECONNREFUSED.*?(5432|3306|6379|27017)/i, cause: "A database/cache the app needs is not running.", next: "check_ports (it should be IN USE) and check_docker" },
+      { re: /ECONNREFUSED/i, cause: "Something the app connects to isn't listening.", next: "check_ports and check_docker" },
+      { re: /(undefined|missing|required).{0,40}(env|environment|variable)|is not set/i, cause: "A required environment variable is missing.", next: "check_env" },
+      { re: /Cannot connect to the Docker daemon/i, cause: "The Docker daemon isn't running.", next: "check_docker" },
+      { re: /command not found|ENOENT.*spawn|is not recognized as an internal/i, cause: "A required program isn't installed or isn't on PATH.", next: "check_tools" },
+      { re: /EACCES|permission denied/i, cause: "A permissions problem (file, port <1024, or global install).", next: "inspect the path in the message; avoid sudo for npm installs" },
+      { re: /ERESOLVE|peer dep/i, cause: "Conflicting package versions.", next: "check_deps; try the install with --legacy-peer-deps if the conflict is only a peer range" }
+    ];
+    ICON = { ok: "\u2714", warn: "\u26A0", fail: "\u2716", info: "\xB7" };
+  }
+});
+
+// src/doctor/server.ts
+var server_exports2 = {};
+__export(server_exports2, {
+  report: () => report,
+  serve: () => serve2
+});
+import { resolve } from "node:path";
+async function report() {
+  const result = await diagnose(root());
+  console.log(result.text);
+  return result.failures > 0 ? 1 : 0;
+}
+async function serve2() {
+  const server2 = new McpServer({ name: "env-doctor", version: "0.1.0" });
+  server2.registerTool(
+    "diagnose",
+    {
+      description: "Full health check of this project's environment: required tool versions vs what's installed, missing dependencies, missing/undefined env vars (names only, never values), busy ports, Docker. Call this FIRST when a build/start fails or 'works on my machine' problems appear, before running many shell commands.",
+      inputSchema: {}
+    },
+    async () => text2((await diagnose(root())).text)
+  );
+  server2.registerTool(
+    "explain_error",
+    {
+      description: "Paste an error message; get the likely cause and which check to run next.",
+      inputSchema: { error: external_exports.string().min(3).max(8e3) }
+    },
+    async ({ error: error62 }) => text2(explain(error62))
+  );
+  server2.registerTool(
+    "check_tools",
+    { description: "Compare installed node/python/go/rust/docker/package-manager versions with what the project requires.", inputSchema: {} },
+    async () => text2(format("Tools", await checkTools(root())))
+  );
+  server2.registerTool(
+    "check_deps",
+    { description: "Are the project's node dependencies installed and up to date with the lockfile?", inputSchema: {} },
+    async () => text2(format("Dependencies", checkDeps(root())))
+  );
+  server2.registerTool(
+    "check_env",
+    {
+      description: "Compare .env with .env.example and with variables read in code. Reports variable NAMES only; values are never read or shown.",
+      inputSchema: {}
+    },
+    async () => text2(format("Environment variables", checkEnv(root())))
+  );
+  server2.registerTool(
+    "check_ports",
+    {
+      description: "Which ports are in use and by what process. Defaults to the ports the project mentions (.env, compose, scripts).",
+      inputSchema: { ports: external_exports.array(external_exports.number().int().min(1).max(65535)).max(30).optional() }
+    },
+    async ({ ports }) => text2(format("Ports", await checkPorts(ports ?? projectPorts(root()))))
+  );
+  server2.registerTool(
+    "check_docker",
+    { description: "If the project uses Docker: is the daemon running?", inputSchema: {} },
+    async () => text2(format("Docker", await checkDocker(root())))
+  );
+  await server2.connect(new StdioServerTransport());
+}
+var root, text2;
+var init_server4 = __esm({
+  "src/doctor/server.ts"() {
+    "use strict";
+    init_mcp();
+    init_stdio2();
+    init_zod();
+    init_checks4();
+    root = () => resolve(process.env.DOCTOR_ROOT ?? process.cwd());
+    text2 = (value) => ({ content: [{ type: "text", text: value }] });
+  }
+});
+
 // src/memory/viewer.ts
 var viewer_exports = {};
 __export(viewer_exports, {
   viewGraph: () => viewGraph
 });
-import { execFile } from "node:child_process";
-import { createServer } from "node:http";
+import { execFile as execFile2 } from "node:child_process";
+import { createServer as createServer2 } from "node:http";
 import { platform } from "node:os";
 async function viewGraph(port = 4747) {
-  const root = memoryRoot();
-  const server2 = createServer((req, res) => {
+  const root2 = memoryRoot();
+  const server2 = createServer2((req, res) => {
     if (req.url?.startsWith("/graph.json")) {
-      const graph = loadGraph(root);
+      const graph = loadGraph(root2);
       res.setHeader("content-type", "application/json");
-      res.end(JSON.stringify({ graph, stale: staleMap(root, graph) }));
+      res.end(JSON.stringify({ graph, stale: staleMap(root2, graph) }));
     } else {
       res.setHeader("content-type", "text/html; charset=utf-8");
       res.end(PAGE);
     }
   });
-  await new Promise((resolve2, reject) => server2.once("error", reject).listen(port, "127.0.0.1", resolve2));
+  await new Promise((resolve3, reject) => server2.once("error", reject).listen(port, "127.0.0.1", resolve3));
   const url2 = `http://127.0.0.1:${port}`;
   console.log(`project memory graph \u2192 ${url2}  (Ctrl+C to stop)`);
   const opener = platform() === "darwin" ? "open" : platform() === "win32" ? "cmd" : "xdg-open";
-  execFile(opener, platform() === "win32" ? ["/c", "start", "", url2] : [url2], () => {
+  execFile2(opener, platform() === "win32" ? ["/c", "start", "", url2] : [url2], () => {
   });
 }
 var PAGE;
@@ -38155,36 +38654,36 @@ __export(install_exports, {
   install: () => install
 });
 import { execFileSync as execFileSync2 } from "node:child_process";
-import { copyFileSync, cpSync, existsSync, mkdirSync as mkdirSync2, readFileSync as readFileSync2, rmSync, writeFileSync as writeFileSync2 } from "node:fs";
+import { copyFileSync, cpSync, existsSync as existsSync2, mkdirSync as mkdirSync2, readFileSync as readFileSync3, rmSync, writeFileSync as writeFileSync2 } from "node:fs";
 import { homedir, platform as platform2 } from "node:os";
-import { dirname as dirname2, join as join2 } from "node:path";
+import { dirname as dirname2, join as join3 } from "node:path";
 import { fileURLToPath } from "node:url";
 function patchJson(file2, keyPath, name, entry, remove) {
-  if (!existsSync(file2)) {
+  if (!existsSync2(file2)) {
     if (remove) return "not installed";
     mkdirSync2(dirname2(file2), { recursive: true });
   }
   let data = {};
-  if (existsSync(file2)) {
+  if (existsSync2(file2)) {
     try {
-      data = JSON.parse(readFileSync2(file2, "utf8") || "{}");
+      data = JSON.parse(readFileSync3(file2, "utf8") || "{}");
     } catch {
       return "skipped (config has comments/invalid JSON \u2014 edit it manually)";
     }
   }
   const bucket = data[keyPath] ??= {};
   if (remove ? !bucket[name] : bucket[name]) return remove ? "not installed" : "already installed";
-  if (existsSync(file2)) copyFileSync(file2, `${file2}.bak`);
+  if (existsSync2(file2)) copyFileSync(file2, `${file2}.bak`);
   if (remove) delete bucket[name];
   else bucket[name] = entry;
   writeFileSync2(file2, JSON.stringify(data, null, 2) + "\n");
   return remove ? "removed" : "installed";
 }
 function patchPlugin(dir, configFile, remove) {
-  const target = join2(dir, "file-tree-plugin");
+  const target = join3(dir, "file-tree-plugin");
   let data;
   try {
-    data = JSON.parse(readFileSync2(configFile, "utf8") || "{}");
+    data = JSON.parse(readFileSync3(configFile, "utf8") || "{}");
   } catch {
     return remove ? "skipped (config unreadable)" : `copied to ${target} \u2014 add it to "plugins" manually`;
   }
@@ -38198,9 +38697,9 @@ function patchPlugin(dir, configFile, remove) {
     writeFileSync2(configFile, JSON.stringify(data, null, 2) + "\n");
     return "removed";
   }
-  if (!existsSync(join2(PKG_DIR, "tui.tsx"))) return "skipped (plugin sources not in this package)";
+  if (!existsSync2(join3(PKG_DIR, "tui.tsx"))) return "skipped (plugin sources not in this package)";
   mkdirSync2(target, { recursive: true });
-  for (const item of ["index.ts", "tui.tsx", "src"]) cpSync(join2(PKG_DIR, item), join2(target, item), { recursive: true });
+  for (const item of ["index.ts", "tui.tsx", "src"]) cpSync(join3(PKG_DIR, item), join3(target, item), { recursive: true });
   if (listed) return "updated";
   plugins.push(target);
   copyFileSync(configFile, `${configFile}.bak`);
@@ -38208,7 +38707,7 @@ function patchPlugin(dir, configFile, remove) {
   return "installed";
 }
 function install(remove = false) {
-  const found = clients.filter((c) => existsSync(c.detect));
+  const found = clients.filter((c) => existsSync2(c.detect));
   if (found.length === 0) console.log("No supported MCP clients detected.");
   for (const c of found) console.log(`${c.name.padEnd(15)} ${c.run(remove)}`);
   if (found.length) console.log(`
@@ -38221,7 +38720,8 @@ var init_install = __esm({
     NAME = "file-tree";
     SERVERS = [
       { name: NAME, extra: [] },
-      { name: "project-memory", extra: ["memory"] }
+      { name: "project-memory", extra: ["memory"] },
+      { name: "env-doctor", extra: ["doctor"] }
     ];
     MOD = "file-tree-pane";
     win = platform2() === "win32";
@@ -38229,12 +38729,12 @@ var init_install = __esm({
     home = homedir();
     PKG_DIR = dirname2(fileURLToPath(import.meta.url));
     stdio = (extra) => ({ command: CMD, args: [...ARGS, ...extra] });
-    appSupport = platform2() === "darwin" ? join2(home, "Library/Application Support") : win ? process.env.APPDATA ?? join2(home, "AppData/Roaming") : join2(home, ".config");
+    appSupport = platform2() === "darwin" ? join3(home, "Library/Application Support") : win ? process.env.APPDATA ?? join3(home, "AppData/Roaming") : join3(home, ".config");
     mcpServers = (file2) => (remove) => SERVERS.map((s) => `${s.name} ${patchJson(file2, "mcpServers", s.name, stdio(s.extra), remove)}`).join("; ");
     clients = [
       {
         name: "Claude Code",
-        detect: join2(home, ".claude"),
+        detect: join3(home, ".claude"),
         run(remove) {
           const claude = (...args) => {
             try {
@@ -38260,41 +38760,43 @@ var init_install = __esm({
           return `${mcp}; /tree pane ${pane}`;
         }
       },
-      { name: "Claude Desktop", detect: join2(appSupport, "Claude"), run: mcpServers(join2(appSupport, "Claude/claude_desktop_config.json")) },
-      { name: "Cursor", detect: join2(home, ".cursor"), run: mcpServers(join2(home, ".cursor/mcp.json")) },
-      { name: "Windsurf", detect: join2(home, ".codeium/windsurf"), run: mcpServers(join2(home, ".codeium/windsurf/mcp_config.json")) },
-      { name: "Kiro", detect: join2(home, ".kiro"), run: mcpServers(join2(home, ".kiro/settings/mcp.json")) },
+      { name: "Claude Desktop", detect: join3(appSupport, "Claude"), run: mcpServers(join3(appSupport, "Claude/claude_desktop_config.json")) },
+      { name: "Cursor", detect: join3(home, ".cursor"), run: mcpServers(join3(home, ".cursor/mcp.json")) },
+      { name: "Windsurf", detect: join3(home, ".codeium/windsurf"), run: mcpServers(join3(home, ".codeium/windsurf/mcp_config.json")) },
+      { name: "Kiro", detect: join3(home, ".kiro"), run: mcpServers(join3(home, ".kiro/settings/mcp.json")) },
       {
         name: "Antigravity",
-        detect: join2(home, ".gemini/antigravity"),
-        run: mcpServers(join2(home, ".gemini/antigravity/mcp_config.json"))
+        detect: join3(home, ".gemini/antigravity"),
+        run: mcpServers(join3(home, ".gemini/antigravity/mcp_config.json"))
       },
-      { name: "Gemini CLI", detect: join2(home, ".gemini"), run: mcpServers(join2(home, ".gemini/settings.json")) },
+      { name: "Gemini CLI", detect: join3(home, ".gemini"), run: mcpServers(join3(home, ".gemini/settings.json")) },
       {
         name: "OpenCode",
-        detect: join2(home, ".config/opencode"),
+        detect: join3(home, ".config/opencode"),
         run(remove) {
-          const dir = join2(home, ".config/opencode");
-          const file2 = existsSync(join2(dir, "opencode.json")) ? join2(dir, "opencode.json") : join2(dir, "opencode.jsonc");
-          const memory = SERVERS[1];
-          const entry = { type: "local", command: [CMD, ...ARGS, ...memory.extra], enabled: true };
-          return `sidebar plugin ${patchPlugin(dir, file2, remove)}; ${memory.name} ${patchJson(file2, "mcp", memory.name, entry, remove)}`;
+          const dir = join3(home, ".config/opencode");
+          const file2 = existsSync2(join3(dir, "opencode.json")) ? join3(dir, "opencode.json") : join3(dir, "opencode.jsonc");
+          const extra = SERVERS.slice(1).map((srv) => {
+            const entry = { type: "local", command: [CMD, ...ARGS, ...srv.extra], enabled: true };
+            return `${srv.name} ${patchJson(file2, "mcp", srv.name, entry, remove)}`;
+          });
+          return [`sidebar plugin ${patchPlugin(dir, file2, remove)}`, ...extra].join("; ");
         }
       },
       {
         name: "Codex",
-        detect: join2(home, ".codex"),
+        detect: join3(home, ".codex"),
         run(remove) {
-          const file2 = join2(home, ".codex/config.toml");
+          const file2 = join3(home, ".codex/config.toml");
           return SERVERS.map((srv) => {
-            const text2 = existsSync(file2) ? readFileSync2(file2, "utf8") : "";
+            const text3 = existsSync2(file2) ? readFileSync3(file2, "utf8") : "";
             const header = `[mcp_servers.${srv.name}]`;
-            const has = text2.includes(header);
+            const has = text3.includes(header);
             if (remove ? !has : has) return `${srv.name} ${remove ? "not installed" : "already installed"}`;
-            if (text2) copyFileSync(file2, `${file2}.bak`);
+            if (text3) copyFileSync(file2, `${file2}.bak`);
             const block = new RegExp(`\\n?\\[mcp_servers\\.${srv.name}\\]\\n(?:[^\\[\\n].*\\n?)*`);
             const args = [...ARGS, ...srv.extra];
-            writeFileSync2(file2, remove ? text2.replace(block, "") : `${text2}
+            writeFileSync2(file2, remove ? text3.replace(block, "") : `${text3}
 ${header}
 command = "${CMD}"
 args = ${JSON.stringify(args)}
@@ -38311,67 +38813,19 @@ args = ${JSON.stringify(args)}
 init_mcp();
 init_stdio2();
 init_zod();
+init_ignore();
 import { execFileSync as execFileSync3 } from "node:child_process";
-import { readdirSync, readFileSync as readFileSync3, statSync } from "node:fs";
-import { relative, resolve } from "node:path";
-
-// src/lib/ignore.ts
-var DEFAULT_IGNORES = [
-  "node_modules",
-  ".git",
-  ".hg",
-  ".svn",
-  ".DS_Store",
-  "dist",
-  "build",
-  "out",
-  ".next",
-  ".nuxt",
-  ".svelte-kit",
-  ".turbo",
-  ".cache",
-  ".parcel-cache",
-  ".vercel",
-  ".netlify",
-  "target",
-  "vendor",
-  "__pycache__",
-  ".venv",
-  "venv",
-  ".mypy_cache",
-  ".pytest_cache",
-  ".ruff_cache",
-  "coverage",
-  ".nyc_output",
-  ".idea",
-  ".gradle",
-  ".terraform",
-  "Pods",
-  "DerivedData",
-  ".expo",
-  ".dart_tool",
-  ".pnpm-store",
-  ".yarn"
-];
-function createIgnore(extra) {
-  const set2 = new Set(DEFAULT_IGNORES);
-  for (const entry of extra ?? []) {
-    const name = entry.trim().replace(/\/+$/, "");
-    if (name) set2.add(name);
-  }
-  return set2;
-}
-function isIgnored(relativePath, ignore) {
-  if (ignore.size === 0) return false;
-  for (const segment of relativePath.split("/")) {
-    if (segment && ignore.has(segment)) return true;
-  }
-  return false;
-}
-
-// mcp.ts
+import { readdirSync as readdirSync2, readFileSync as readFileSync4, statSync as statSync2 } from "node:fs";
+import { relative, resolve as resolve2 } from "node:path";
 if (process.argv[2] === "memory") {
   await (await Promise.resolve().then(() => (init_server3(), server_exports))).serve();
+  await new Promise((done) => process.stdin.on("close", done));
+  process.exit(0);
+}
+if (process.argv[2] === "doctor") {
+  const doctor = await Promise.resolve().then(() => (init_server4(), server_exports2));
+  if (process.argv[3] === "--report") process.exit(await doctor.report());
+  await doctor.serve();
   await new Promise((done) => process.stdin.on("close", done));
   process.exit(0);
 }
@@ -38385,9 +38839,9 @@ if (process.argv[2] === "install" || process.argv[2] === "uninstall") {
   (await Promise.resolve().then(() => (init_install(), install_exports))).install(process.argv[2] === "uninstall");
   process.exit(0);
 }
-var ROOT = resolve(process.argv[2] ?? process.cwd());
-function gitChanges(root) {
-  const git2 = (...args) => execFileSync3("git", ["-c", "core.quotepath=off", "-C", root, ...args], {
+var ROOT = resolve2(process.argv[2] ?? process.cwd());
+function gitChanges(root2) {
+  const git2 = (...args) => execFileSync3("git", ["-c", "core.quotepath=off", "-C", root2, ...args], {
     encoding: "utf8",
     maxBuffer: 64 << 20,
     stdio: ["ignore", "pipe", "pipe"]
@@ -38416,21 +38870,21 @@ function gitChanges(root) {
       }
     }
   } catch (error62) {
-    return `Not a git repository (or git failed) at ${root}: ${error62.message.split("\n")[0]}`;
+    return `Not a git repository (or git failed) at ${root2}: ${error62.message.split("\n")[0]}`;
   }
   return changes;
 }
 var stats = (c) => c.additions === void 0 ? "" : `  +${c.additions} -${c.deletions}`;
-function renderTree(root, maxDepth, maxRows, extraIgnore) {
+function renderTree(root2, maxDepth, maxRows, extraIgnore) {
   const ignore = createIgnore(extraIgnore);
-  const changes = gitChanges(root);
+  const changes = gitChanges(root2);
   const changed = typeof changes === "string" ? /* @__PURE__ */ new Map() : changes;
   const lines = [];
   let truncated = false;
   const walk = (dir, rel, depth) => {
     let entries;
     try {
-      entries = readdirSync(resolve(root, rel), { withFileTypes: true });
+      entries = readdirSync2(resolve2(root2, rel), { withFileTypes: true });
     } catch {
       return;
     }
@@ -38452,14 +38906,14 @@ function renderTree(root, maxDepth, maxRows, extraIgnore) {
       }
     }
   };
-  walk(root, "", 0);
+  walk(root2, "", 0);
   if (truncated) lines.push(`\u2026 truncated at ${maxRows} rows (raise maxRows or lower maxDepth)`);
-  return [`${root}`, ...lines].join("\n");
+  return [`${root2}`, ...lines].join("\n");
 }
 function inRoot(path) {
-  const full = resolve(ROOT, path);
+  const full = resolve2(ROOT, path);
   const rel = relative(ROOT, full);
-  if (rel.startsWith("..") || resolve(rel) === rel) throw new Error(`Path is outside the project: ${path}`);
+  if (rel.startsWith("..") || resolve2(rel) === rel) throw new Error(`Path is outside the project: ${path}`);
   return full;
 }
 function searchFiles(query, limit, extraIgnore) {
@@ -38467,7 +38921,7 @@ function searchFiles(query, limit, extraIgnore) {
   const needle = query.toLowerCase();
   const hits = [];
   const walk = (rel) => {
-    for (const entry of readdirSync(resolve(ROOT, rel), { withFileTypes: true })) {
+    for (const entry of readdirSync2(resolve2(ROOT, rel), { withFileTypes: true })) {
       if (hits.length >= limit) return;
       const path = rel ? `${rel}/${entry.name}` : entry.name;
       if (isIgnored(path, ignore)) continue;
@@ -38491,7 +38945,7 @@ server.registerTool(
     }
   },
   async ({ path, maxDepth = 4, maxRows = 160, ignore = [] }) => ({
-    content: [{ type: "text", text: renderTree(resolve(ROOT, path ?? "."), maxDepth, maxRows, ignore) }]
+    content: [{ type: "text", text: renderTree(resolve2(ROOT, path ?? "."), maxDepth, maxRows, ignore) }]
   })
 );
 server.registerTool(
@@ -38501,12 +38955,12 @@ server.registerTool(
     inputSchema: { path: external_exports.string().optional().describe("Repo directory. Defaults to the project root.") }
   },
   async ({ path }) => {
-    const result = gitChanges(resolve(ROOT, path ?? "."));
+    const result = gitChanges(resolve2(ROOT, path ?? "."));
     if (typeof result === "string") return { content: [{ type: "text", text: result }], isError: true };
     const rows = [...result].sort(([a], [b]) => a.localeCompare(b));
-    const text2 = rows.length ? `${rows.length} file(s) changed:
+    const text3 = rows.length ? `${rows.length} file(s) changed:
 ${rows.map(([p, c]) => `${c.status}  ${p}${stats(c)}`).join("\n")}` : "No uncommitted changes.";
-    return { content: [{ type: "text", text: text2 }] };
+    return { content: [{ type: "text", text: text3 }] };
   }
 );
 server.registerTool(
@@ -38537,11 +38991,11 @@ server.registerTool(
   async ({ path, startLine, endLine }) => {
     try {
       const full = inRoot(path);
-      if (statSync(full).size > 200 * 1024) throw new Error("File is larger than 200 KB; use a smaller file.");
-      const text2 = readFileSync3(full, "utf8");
-      if (text2.includes("\0")) throw new Error("Binary file.");
-      const out = startLine || endLine ? text2.split("\n").slice((startLine ?? 1) - 1, endLine).join("\n") : text2;
-      return { content: [{ type: "text", text: out }] };
+      if (statSync2(full).size > 200 * 1024) throw new Error("File is larger than 200 KB; use a smaller file.");
+      const text3 = readFileSync4(full, "utf8");
+      if (text3.includes("\0")) throw new Error("Binary file.");
+      const out2 = startLine || endLine ? text3.split("\n").slice((startLine ?? 1) - 1, endLine).join("\n") : text3;
+      return { content: [{ type: "text", text: out2 }] };
     } catch (error62) {
       return { content: [{ type: "text", text: error62.message }], isError: true };
     }

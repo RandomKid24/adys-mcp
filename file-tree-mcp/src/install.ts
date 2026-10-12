@@ -6,10 +6,11 @@ import { dirname, join } from "node:path"
 import { fileURLToPath } from "node:url"
 
 const NAME = "file-tree"
-// Two servers from one package; the second is selected by the `memory` argument.
+// Servers from one package; the second is selected by the `memory` argument.
 const SERVERS = [
   { name: NAME, extra: [] as string[] },
   { name: "project-memory", extra: ["memory"] },
+  { name: "env-doctor", extra: ["doctor"] },
 ]
 const MOD = "file-tree-pane"
 const win = platform() === "win32"
@@ -138,10 +139,12 @@ const clients: Client[] = [
     run(remove) {
       const dir = join(home, ".config/opencode")
       const file = existsSync(join(dir, "opencode.json")) ? join(dir, "opencode.json") : join(dir, "opencode.jsonc")
-      // The plugin already provides the sidebar and edited-files tool, so only project-memory needs an MCP entry.
-      const memory = SERVERS[1]!
-      const entry = { type: "local", command: [CMD, ...ARGS, ...memory.extra], enabled: true }
-      return `sidebar plugin ${patchPlugin(dir, file, remove)}; ${memory.name} ${patchJson(file, "mcp", memory.name, entry, remove)}`
+      // The plugin already provides the sidebar and edited-files tool, so the other servers need MCP entries.
+      const extra = SERVERS.slice(1).map((srv) => {
+        const entry = { type: "local", command: [CMD, ...ARGS, ...srv.extra], enabled: true }
+        return `${srv.name} ${patchJson(file, "mcp", srv.name, entry, remove)}`
+      })
+      return [`sidebar plugin ${patchPlugin(dir, file, remove)}`, ...extra].join("; ")
     },
   },
   {
