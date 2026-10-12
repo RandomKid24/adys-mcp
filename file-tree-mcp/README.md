@@ -110,7 +110,7 @@ configure it in `cli.json` instead:
 
 ```jsonc title="opencode.jsonc"
 {
-  "plugins": ["/absolute/path/to/opencode-file-tree"]
+  "plugins": ["/absolute/path/to/file-tree-mcp"]
 }
 ```
 
@@ -225,8 +225,9 @@ did this session change?" without guessing.
 ## Package layout
 
 ```
-opencode-file-tree/
-├── index.ts                 # server plugin entry (tool registration)
+file-tree-mcp/
+├── mcp.ts / mcp.js          # universal MCP server (source / prebuilt)
+├── index.ts                 # OpenCode server plugin entry
 ├── tui.tsx                  # terminal UI entry (slot, commands, events)
 └── src/
     ├── components/
