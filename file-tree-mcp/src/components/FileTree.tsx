@@ -10,19 +10,11 @@ import { baseName } from "../lib/paths.ts"
 import { flattenEdited, flattenTree, marker, type Row } from "../lib/render.ts"
 import { mergeDeletedFiles, scanTree } from "../lib/scan.ts"
 
-export type FileTreeVariant = "sidebar" | "panel"
-
 export interface FileTreeProps {
   sessionID: string
   config: ResolvedConfig
   ui: Store<UiState>
   settings: Store<SettingsState>
-  /**
-   * `"sidebar"` (default) caps expansion at the configured depth and renders
-   * inline. `"panel"` renders the whole collected tree inside a scrollbox for
-   * the full-screen `session.panel` view.
-   */
-  variant?: FileTreeVariant
   /** Panel focus state, forwarded to the scrollbox so keys scroll the tree. */
   focused?: boolean
   /** Toggle a directory's expanded state (persisted in the shared UI store). */
@@ -32,8 +24,6 @@ export interface FileTreeProps {
 export function FileTree(props: FileTreeProps) {
   const ctx = usePlugin()
   const theme = ctx.theme
-
-  const isPanel = (): boolean => props.variant === "panel"
 
   const location = () => ctx.location ?? ctx.data.location.default()
   const rootName = () => baseName(location().directory) || location().directory
@@ -100,19 +90,19 @@ export function FileTree(props: FileTreeProps) {
       }),
   )
 
-  /** Explicit user overrides win; otherwise expand by depth (or all, in the panel). */
+  /** Explicit user overrides win; otherwise expand by depth. */
   const isOpen = (path: string, depth: number): boolean => {
     const override = props.ui.expanded[path]
     if (override !== undefined) return override
     if (props.ui.expandAll !== undefined) return props.ui.expandAll
-    return isPanel() ? true : depth < props.settings.expandDepth
+    return depth < props.settings.expandDepth
   }
 
   const [hovered, setHovered] = createSignal<string | undefined>(undefined)
 
   const flat = createMemo(() => {
     const editedMap = edited()
-    if (!isPanel() && props.ui.onlyEdited) return flattenEdited(editedMap, props.settings.maxRows)
+    if (props.ui.onlyEdited) return flattenEdited(editedMap, props.settings.maxRows)
     const deleted: string[] = []
     for (const file of editedMap.values()) if (file.status === "deleted") deleted.push(file.path)
     const nodes = mergeDeletedFiles(tree()?.nodes ?? [], deleted)
@@ -174,11 +164,8 @@ export function FileTree(props: FileTreeProps) {
     props.onToggleDir?.(row.path, !row.open)
   }
 
-  const shown = () => (isPanel() ? flat().rows : flat().rows.slice(0, props.config.sidebarRows))
-  const hidden = () => flat().rows.length - shown().length
-
   const rows = () => (
-    <For each={shown()}>
+    <For each={flat().rows}>
       {(row) => {
         const clickable = (): boolean => row.kind === "dir" && row.expandable === true
         return (
@@ -214,28 +201,22 @@ export function FileTree(props: FileTreeProps) {
   )
 
   const empty = () =>
-    isPanel() ? "No files" : props.ui.onlyEdited ? "No files edited yet" : "No files"
+    props.ui.onlyEdited ? "No files edited yet" : "No files"
 
   return (
-    <box flexDirection="column" flexGrow={isPanel() ? 1 : undefined}>
+    <box flexDirection="column">
       <text wrapMode="none" fg={theme.text.base}>
         <span style={{ fg: theme.text.base }}>{rootName()}</span>
         <span style={{ fg: theme.text.muted }}>{`  ${edited().size} edited`}</span>
       </text>
 
       <Show when={flat().rows.length > 0} fallback={<text wrapMode="none" fg={theme.text.muted}>{empty()}</text>}>
-        <Show when={isPanel()} fallback={rows()}>
-          <scrollbox flexGrow={1} scrollY focused={props.focused}>
-            {rows()}
-          </scrollbox>
-        </Show>
+        <scrollbox height={Math.min(flat().rows.length, props.config.sidebarRows)} scrollY focused={props.focused}>
+          {rows()}
+        </scrollbox>
       </Show>
 
-      <Show when={!isPanel() && hidden() > 0}>
-        <text wrapMode="none" fg={theme.text.muted}>{`… ${hidden()} more · /filetree-panel`}</text>
-      </Show>
-
-      <Show when={isPanel() && flat().truncated}>
+      <Show when={flat().truncated}>
         <text wrapMode="none" fg={theme.text.muted}>… truncated (raise maxRows / maxDepth)</text>
       </Show>
     </box>

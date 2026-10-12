@@ -74,7 +74,7 @@ my-project
 - **Deleted files** stay visible as red ghost rows (tracked from the workspace
   file watcher).
 - Edited-only mode when you only care about the diff surface.
-- A full-screen tree panel (`/filetree-panel`) for browsing the whole tree.
+- A fixed-height, scrollable sidebar (mouse wheel) — never takes over the screen.
 - A server-side tool, `filetree_edited_files`, namespaced under `filetree`.
 - Walks the project through the OpenCode `file.list` API — no `node:fs`, no
   filesystem permissions, and it works against a remote server too.
@@ -151,7 +151,7 @@ Pass options with the object form of a `plugins` entry:
 | `includeSubagents` | `false`   |            | Also highlight files touched by child (subagent) sessions.         |
 | `maxDepth`         | `4`       | 1–12       | How many directory levels to walk below the project root.          |
 | `maxRows`          | `160`     | 10–2000    | Cap on collected/rendered rows, to keep the tree bounded.          |
-| `sidebarRows`      | `15`      | 3–200      | Rows shown in the sidebar before it collapses to `… N more`.       |
+| `sidebarRows`      | `15`      | 3–200      | Height of the sidebar tree; scroll for the rest.                   |
 | `expandDepth`      | `1`       | 1–12       | Directories expanded by default in the **sidebar** view.           |
 | `concurrency`      | `8`       | 1–32       | Maximum concurrent `file.list` requests while walking.             |
 | `ignore`           | `[]`      |            | Extra path segments to skip, on top of the built-in ignore list.   |
@@ -171,12 +171,8 @@ Available from the command palette and, where noted, as slash commands.
 | File tree: show / hide                        | `/filetree`       | Toggle the sidebar tree. |
 | File tree: toggle edited-only view            | `/filetree-mode`  | Show just the edited files.                   |
 | File tree: refresh                            | `/filetree-refresh` | Rescan the tree.                            |
-| File tree: open full tree panel               | `/filetree-panel` | Open the whole tree in the session panel.     |
 
 Clicking a folder row toggles just that folder.
-
-The full-tree panel is a `session.panel` contribution: the host owns its sizing
-and focus, and the tree scrolls inside it.
 
 ## How highlighting works
 
@@ -228,7 +224,7 @@ file-tree-mcp/
 ├── tui.tsx                  # terminal UI entry (slot, commands, events)
 └── src/
     ├── components/
-    │   └── FileTree.tsx     # Solid component for the sidebar and panel
+    │   └── FileTree.tsx     # Solid component for the sidebar
     └── lib/
         ├── scan.ts          # bounded recursive tree walk over file.list
         ├── edited.ts        # derive the edited-file set (status + line counts)

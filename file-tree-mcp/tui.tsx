@@ -5,9 +5,6 @@ import { resolveConfig, type SettingsState, type UiState } from "./src/lib/confi
 import { isIgnored } from "./src/lib/ignore.ts"
 import { toRelative } from "./src/lib/paths.ts"
 
-/** Selection name for the full-tree `session.panel` view. */
-const PANEL_NAME = "opencode-file-tree.tree"
-
 export default Plugin.define({
   id: "opencode-file-tree.tui",
   setup(context) {
@@ -48,26 +45,6 @@ export default Plugin.define({
             config={config}
             ui={ui}
             settings={settings}
-            onToggleDir={setDirOpen}
-          />
-        </Show>
-      ),
-    })
-
-    // Full-tree view in the focusable session panel. The host owns sizing,
-    // focus and full-screen presentation; this contribution renders only when
-    // its selection name is the one the panel was opened with.
-    context.ui.slot({
-      append: "session.panel",
-      render: (panel) => (
-        <Show when={panel.name === PANEL_NAME}>
-          <FileTree
-            sessionID={panel.sessionID}
-            config={config}
-            ui={ui}
-            settings={settings}
-            variant="panel"
-            focused={panel.focused}
             onToggleDir={setDirOpen}
           />
         </Show>
@@ -147,16 +124,6 @@ export default Plugin.define({
           palette: true,
           slash: { name: "filetree-refresh" },
           run: () => bump("refresh"),
-        },
-        {
-          id: "filetree.panel",
-          title: "File tree: open full tree panel",
-          group: "File tree",
-          palette: true,
-          slash: { name: "filetree-panel" },
-          run: () => {
-            context.ui.panel.open(PANEL_NAME)
-          },
         },
       ],
     }))
