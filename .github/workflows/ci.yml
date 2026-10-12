@@ -1,0 +1,27 @@
+name: ci
+on:
+  push:
+    branches: [main]
+  pull_request:
+
+jobs:
+  check:
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: file-tree-mcp
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 24
+          cache: npm
+          cache-dependency-path: file-tree-mcp/package-lock.json
+      - run: npm ci --legacy-peer-deps
+      - run: npm run typecheck
+      - run: npm test
+      - run: npm run build
+      # npx runs the committed bundle, so a stale one silently ships old code.
+      - name: mcp.js is up to date
+        run: |
+          git diff --exit-code -- mcp.js || { echo "::error::mcp.js is stale: run 'npm run build' in file-tree-mcp and commit it"; exit 1; }

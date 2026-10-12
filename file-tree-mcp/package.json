@@ -21,7 +21,8 @@
     "typecheck": "tsc --noEmit",
     "smoke": "node --experimental-strip-types scripts/smoke.ts",
     "mcp": "node mcp.ts",
-    "build": "npx -y esbuild mcp.ts --bundle --platform=node --format=esm --target=node18 --outfile=mcp.js --banner:js='import{createRequire as __cr}from\"module\";const require=__cr(import.meta.url);'"
+    "build": "esbuild mcp.ts --bundle --platform=node --format=esm --target=node18 --outfile=mcp.js --banner:js='import{createRequire as __cr}from\"module\";const require=__cr(import.meta.url);'",
+    "test": "node src/memory/core.test.ts && node src/doctor/semver.test.ts && node src/mcpctl.test.ts"
   },
   "keywords": [
     "opencode",
@@ -59,6 +60,7 @@
     "@opentui/core": "^0.6.1",
     "@opentui/solid": "^0.6.1",
     "@types/node": "^24.12.2",
+    "esbuild": "0.28.2",
     "solid-js": "^1.9.17",
     "typescript": "^5.8.2"
   },
