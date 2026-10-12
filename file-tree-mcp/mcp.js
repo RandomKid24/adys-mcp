@@ -38422,6 +38422,7 @@ function watchChanges(root2, log) {
   const pending = /* @__PURE__ */ new Set();
   let timer;
   const flush = () => {
+    if (timer) clearTimeout(timer);
     timer = void 0;
     const files = [...pending].slice(0, 200).filter((rel) => {
       try {
@@ -38453,6 +38454,7 @@ function watchChanges(root2, log) {
     });
   } catch {
   }
+  return flush;
 }
 async function serve() {
   const root2 = memoryRoot();
@@ -38561,7 +38563,11 @@ async function serve() {
   );
   await server2.connect(new StdioServerTransport());
   const tooBroad = root2 === homedir2() || dirname4(root2) === root2;
-  if (existsSync4(root2) && !tooBroad) watchChanges(root2);
+  if (existsSync4(root2) && !tooBroad) {
+    const flush = watchChanges(root2);
+    process.on("exit", flush);
+    for (const signal of ["SIGINT", "SIGTERM"]) process.on(signal, () => process.exit(0));
+  }
   console.error(`project-memory ${VERSION}: root=${root2} (${tooBroad ? "NOT a project folder - file watcher off; set MEMORY_ROOT" : "file watcher on"})`);
 }
 var text, VERSION, INSTRUCTIONS;

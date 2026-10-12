@@ -48,12 +48,14 @@ const INSTRUCTIONS =
  * Records files that change under `root` while the server runs onto today's session
  * node, so memory fills itself in every client with no hook and no model call.
  */
-export function watchChanges(root: string, log?: (message: string) => void): void {
+/** Returns `flush`, which writes any pending batch immediately (called on exit so a short session loses nothing). */
+export function watchChanges(root: string, log?: (message: string) => void): () => void {
   const ignore = createIgnore([".memory"])
   const pending = new Set<string>()
   let timer: ReturnType<typeof setTimeout> | undefined
 
   const flush = (): void => {
+    if (timer) clearTimeout(timer)
     timer = undefined
     const files = [...pending].slice(0, 200).filter((rel) => {
       try {
@@ -86,6 +88,7 @@ export function watchChanges(root: string, log?: (message: string) => void): voi
   } catch {
     // recursive watching unsupported here: the explicit tools still work
   }
+  return flush
 }
 
 export async function serve(): Promise<void> {
@@ -208,6 +211,10 @@ export async function serve(): Promise<void> {
   await server.connect(new StdioServerTransport())
   // A client that starts the server in $HOME or / is not inside a project; watching that would be huge and private.
   const tooBroad = root === homedir() || dirname(root) === root
-  if (existsSync(root) && !tooBroad) watchChanges(root)
+  if (existsSync(root) && !tooBroad) {
+    const flush = watchChanges(root)
+    process.on("exit", flush) // synchronous, so it runs even when the client closes the pipe and we exit
+    for (const signal of ["SIGINT", "SIGTERM"] as const) process.on(signal, () => process.exit(0))
+  }
   console.error(`project-memory ${VERSION}: root=${root} (${tooBroad ? "NOT a project folder - file watcher off; set MEMORY_ROOT" : "file watcher on"})`) // stderr only: stdout is the protocol
 }
