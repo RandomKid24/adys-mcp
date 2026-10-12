@@ -15,6 +15,9 @@ const IGNORE = new Set([
 const tree = atom({ plugin: 'file-tree-pane', key: 'tree' } as const, [])
 const open = atom({ plugin: 'file-tree-pane', key: 'open' } as const, {})
 const changes = atom({ plugin: 'file-tree-pane', key: 'changes' } as const, {})
+const edit = atom({ plugin: 'file-tree-pane', key: 'edit' } as const, null)
+const EDIT = 'file-edit'
+const MAX_LINES = 5000
 const note = atom({ plugin: 'file-tree-pane', key: 'note' } as const, '')
 
 
@@ -87,6 +90,70 @@ async function refresh($: any): Promise<void> {
   await update($, note, () => (errors.length ? `scan error — ${errors[0]}` : `${entries.length} entries`))
 }
 
+// ---- line editor: the pane API has no multi-line field, so edit one line at a time ----
+
+async function openFile($: any, path: string): Promise<void> {
+  try {
+    const text: string = await $.fs.read(path)
+    const lines = text.split(/\r?\n/)
+    if (text.includes('\0') || lines.length > MAX_LINES) {
+      $.ui.toast(`${path}: binary or too large to edit here`)
+      return
+    }
+    const eol = text.includes('\r\n') ? '\r\n' : '\n'
+    await update($, edit, () => ({ path, lines, eol, sel: -1, top: 0, msg: '' }))
+    await $.ui.open({ id: EDIT, title: path })
+  } catch (error) {
+    $.ui.toast(`Could not open ${path}: ${String(error)}`)
+  }
+}
+
+/** Write `lines` to the open file and record the outcome; `sel` is the new selection. */
+async function commit($: any, lines: string[], sel: number): Promise<void> {
+  const cur = await read($, edit)
+  if (!cur) return
+  let msg = 'saved'
+  try {
+    await $.fs.write(cur.path, lines.join(cur.eol))
+  } catch (error) {
+    msg = `save failed: ${String(error)}`
+  }
+  await update($, edit, prev => (prev ? { ...prev, lines, sel, msg } : prev))
+  if (msg === 'saved') void refresh($).catch(() => {})
+}
+
+async function saveLine($: any, i: number, value: string): Promise<void> {
+  const cur = await read($, edit)
+  if (!cur) return
+  const lines = cur.lines.slice()
+  lines[i] = value
+  await commit($, lines, -1)
+}
+
+async function insertBelow($: any, i: number): Promise<void> {
+  const cur = await read($, edit)
+  if (!cur) return
+  const lines = cur.lines.slice()
+  lines.splice(i + 1, 0, '')
+  await commit($, lines, i + 1)
+}
+
+async function deleteLine($: any, i: number): Promise<void> {
+  const cur = await read($, edit)
+  if (!cur || cur.lines.length <= 1) return
+  const lines = cur.lines.slice()
+  lines.splice(i, 1)
+  await commit($, lines, -1)
+}
+
+async function selectLine($: any, i: number): Promise<void> {
+  await update($, edit, prev => (prev ? { ...prev, sel: i, msg: '' } : prev))
+}
+
+async function scrollBy($: any, delta: number, max: number): Promise<void> {
+  await update($, edit, prev => (prev ? { ...prev, top: Math.max(0, Math.min(max, prev.top + delta)) } : prev))
+}
+
 export const register: Register = on => {
   on('session.start', async ($, e, next) => {
     await $.command.register({ name: 'tree', description: 'Show the project file tree with git changes (free, no tokens)' })
@@ -154,16 +221,72 @@ export const register: Register = on => {
             )
           }
           const change = found[entry.path]
-          if (!change) return <Text key={entry.path}>{pad}  {entry.name}</Text>
+          if (!change) return (
+            <Button key={entry.path} plain onPress={() => void openFile($, entry.path)}>
+              <Text>{pad}  {entry.name}</Text>
+            </Button>
+          )
           const hasCounts = change.additions !== undefined
           return (
-            <Text key={entry.path} color={color(change.status)}>
-              {pad}{change.status} {entry.name}
-              {hasCounts ? <Text color="green"> +{change.additions}</Text> : null}
-              {hasCounts ? <Text color="red"> -{change.deletions}</Text> : null}
-            </Text>
+            <Button key={entry.path} plain onPress={() => void openFile($, entry.path)}>
+              <Text color={color(change.status)}>
+                {pad}{change.status} {entry.name}
+                {hasCounts ? <Text color="green"> +{change.additions}</Text> : null}
+                {hasCounts ? <Text color="red"> -{change.deletions}</Text> : null}
+              </Text>
+            </Button>
           )
         })}
+      </Box>
+    )
+  })
+
+  on('ui.render', { component: 'Pane', requestId: EDIT }, async ($, e) => {
+    const { Box, Text, Button, Input } = $.ui.resolve(e)
+    const cur = await read($, edit)
+    if (!cur) return <Text dimColor>Nothing open — click a file in /tree.</Text>
+
+    const room = Math.max(5, (e.viewport?.rows ?? 24) - 6)
+    const maxTop = Math.max(0, cur.lines.length - room)
+    const top = Math.min(cur.top, maxTop)
+    const width = String(cur.lines.length).length
+    const visible = cur.lines.slice(top, top + room)
+
+    return (
+      <Box flexDirection="column">
+        <Text bold>
+          ✎ {cur.path}
+          <Text color={cur.msg.startsWith('save failed') ? 'red' : 'green'}>{cur.msg ? `  ${cur.msg}` : ''}</Text>
+        </Text>
+        <Text dimColor>click a line, edit, Enter saves it to disk</Text>
+        {visible.map((line, k) => {
+          const i = top + k
+          const label = String(i + 1).padStart(width, ' ')
+          if (i === cur.sel) {
+            return (
+              <Input
+                key={`line-${i}`}
+                label={`${label} `}
+                value={line}
+                autoFocus
+                submitLabel="save line"
+                onSubmit={value => void saveLine($, i, value)}
+              />
+            )
+          }
+          return (
+            <Button key={`row-${i}`} plain dimColor onPress={() => void selectLine($, i)}>
+              <Text>{label} {line}</Text>
+            </Button>
+          )
+        })}
+        <Box flexDirection="row">
+          <Button key="up" onPress={() => void scrollBy($, -room, maxTop)}>↑ page</Button>
+          <Button key="down" onPress={() => void scrollBy($, room, maxTop)}>↓ page</Button>
+          {cur.sel >= 0 ? <Button key="add" onPress={() => void insertBelow($, cur.sel)}>+ line below</Button> : null}
+          {cur.sel >= 0 ? <Button key="del" onPress={() => void deleteLine($, cur.sel)}>× delete line</Button> : null}
+          <Button key="close" role="dismiss" onPress={() => void $.ui.close({ id: EDIT })}>close</Button>
+        </Box>
       </Box>
     )
   })

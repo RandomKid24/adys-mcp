@@ -30,7 +30,7 @@ claude mcp add file-tree -- npx -y github:RandomKid24/adys-mcp
 
 ### Claude Code: free `/tree` pane
 
-The installer also adds the `file-tree-pane` mod (`../claude-code-mod`). `/tree` opens a pane with the project tree, git changes (`A`/`M`/`D`, `+N -M`) and click-to-fold folders. It renders in the terminal directly — **no model call, no tokens**. It rescans after edits. Manual install: `claude plugin marketplace add RandomKid24/adys-mcp && claude plugin install file-tree-pane@adys-mcp`. View-only (no editor); Claude Code's pane API doesn't offer one.
+The installer also adds the `file-tree-pane` mod (`../claude-code-mod`). `/tree` opens a pane with the project tree, git changes (`A`/`M`/`D`, `+N -M`) and click-to-fold folders. It renders in the terminal directly — **no model call, no tokens**. It rescans after edits. Manual install: `claude plugin marketplace add RandomKid24/adys-mcp && claude plugin install file-tree-pane@adys-mcp`. **Click a file to edit it**: a line editor opens in a second pane — click a line, change it, press Enter to save that line to disk; `+ line below`, `× delete line` and page buttons are there too. (Claude Code's pane API has no multi-line text box, so it edits one line at a time.)
 
 ### Uninstall
 
