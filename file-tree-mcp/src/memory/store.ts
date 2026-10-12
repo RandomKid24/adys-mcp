@@ -1,11 +1,27 @@
 import { execFileSync } from "node:child_process"
-import { mkdirSync, readFileSync, writeFileSync } from "node:fs"
+import { existsSync, mkdirSync, readFileSync, writeFileSync } from "node:fs"
 import { dirname, join } from "node:path"
 import { type Graph, neighbors, parseGraph } from "./core.ts"
 
-/** Project the memory belongs to: MEMORY_ROOT, else the client's working directory. */
-export const memoryRoot = (): string => process.env.MEMORY_ROOT ?? process.cwd()
-const graphPath = (root: string): string => join(root, ".memory", "graph.json")
+/**
+ * Project the memory belongs to: MEMORY_ROOT; else the nearest parent folder that already
+ * has a .memory (so the server and the viewer agree even when started from a subfolder);
+ * else the git root; else the working directory.
+ */
+export function memoryRoot(): string {
+  if (process.env.MEMORY_ROOT) return process.env.MEMORY_ROOT
+  const start = process.cwd()
+  for (let dir = start; ; dir = dirname(dir)) {
+    if (existsSync(join(dir, ".memory", "graph.json"))) return dir
+    if (dirname(dir) === dir) break
+  }
+  try {
+    return execFileSync("git", ["-C", start, "rev-parse", "--show-toplevel"], { encoding: "utf8", stdio: ["ignore", "pipe", "ignore"] }).trim() || start
+  } catch {
+    return start
+  }
+}
+export const graphPath = (root: string): string => join(root, ".memory", "graph.json")
 
 export function loadGraph(root: string): Graph {
   try {

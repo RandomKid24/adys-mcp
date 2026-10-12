@@ -38319,8 +38319,21 @@ var init_core3 = __esm({
 
 // src/memory/store.ts
 import { execFileSync as execFileSync3 } from "node:child_process";
-import { mkdirSync as mkdirSync3, readFileSync as readFileSync3, writeFileSync as writeFileSync3 } from "node:fs";
+import { existsSync as existsSync3, mkdirSync as mkdirSync3, readFileSync as readFileSync3, writeFileSync as writeFileSync3 } from "node:fs";
 import { dirname as dirname3, join as join3 } from "node:path";
+function memoryRoot() {
+  if (process.env.MEMORY_ROOT) return process.env.MEMORY_ROOT;
+  const start = process.cwd();
+  for (let dir = start; ; dir = dirname3(dir)) {
+    if (existsSync3(join3(dir, ".memory", "graph.json"))) return dir;
+    if (dirname3(dir) === dir) break;
+  }
+  try {
+    return execFileSync3("git", ["-C", start, "rev-parse", "--show-toplevel"], { encoding: "utf8", stdio: ["ignore", "pipe", "ignore"] }).trim() || start;
+  } catch {
+    return start;
+  }
+}
 function loadGraph(root2) {
   try {
     return parseGraph(readFileSync3(graphPath(root2), "utf8"));
@@ -38351,12 +38364,11 @@ function staleMap(root2, graph) {
   }
   return out2;
 }
-var memoryRoot, graphPath, headSha;
+var graphPath, headSha;
 var init_store = __esm({
   "src/memory/store.ts"() {
     "use strict";
     init_core3();
-    memoryRoot = () => process.env.MEMORY_ROOT ?? process.cwd();
     graphPath = (root2) => join3(root2, ".memory", "graph.json");
     headSha = (root2) => git(root2, "rev-parse", "HEAD");
   }
@@ -38534,7 +38546,7 @@ var init_semver = __esm({
 
 // src/doctor/checks.ts
 import { execFile } from "node:child_process";
-import { existsSync as existsSync3, readdirSync, readFileSync as readFileSync4, statSync } from "node:fs";
+import { existsSync as existsSync4, readdirSync, readFileSync as readFileSync4, statSync } from "node:fs";
 import { createServer } from "node:net";
 import { join as join4 } from "node:path";
 import { promisify } from "node:util";
@@ -38572,10 +38584,10 @@ async function checkTools(root2) {
   const findings = [];
   const reqs = requirements(root2);
   const need = new Set(reqs.map((r) => r.tool));
-  if (existsSync3(join4(root2, "Dockerfile")) || existsSync3(join4(root2, "docker-compose.yml")) || existsSync3(join4(root2, "compose.yaml"))) need.add("docker");
-  const lock = ["pnpm-lock.yaml", "yarn.lock", "package-lock.json"].find((f) => existsSync3(join4(root2, f)));
+  if (existsSync4(join4(root2, "Dockerfile")) || existsSync4(join4(root2, "docker-compose.yml")) || existsSync4(join4(root2, "compose.yaml"))) need.add("docker");
+  const lock = ["pnpm-lock.yaml", "yarn.lock", "package-lock.json"].find((f) => existsSync4(join4(root2, f)));
   if (lock) need.add(lock === "pnpm-lock.yaml" ? "pnpm" : lock === "yarn.lock" ? "yarn" : "npm");
-  if (existsSync3(join4(root2, ".git"))) need.add("git");
+  if (existsSync4(join4(root2, ".git"))) need.add("git");
   for (const tool of need) {
     const probe = PROBES[tool];
     if (!probe) continue;
@@ -38627,12 +38639,12 @@ function checkDeps(root2) {
   const names = Object.keys({ ...pkg.dependencies, ...pkg.devDependencies });
   if (names.length === 0) return [];
   const modules = join4(root2, "node_modules");
-  if (!existsSync3(modules)) return [{ level: "fail", title: "node_modules is missing", fix: "Run your package manager's install." }];
-  const missing = names.filter((n) => !existsSync3(join4(modules, n)));
+  if (!existsSync4(modules)) return [{ level: "fail", title: "node_modules is missing", fix: "Run your package manager's install." }];
+  const missing = names.filter((n) => !existsSync4(join4(modules, n)));
   if (missing.length) {
     return [{ level: "fail", title: `${missing.length} dependenc${missing.length === 1 ? "y is" : "ies are"} not installed`, detail: missing.slice(0, 8).join(", "), fix: "Run your package manager's install." }];
   }
-  const lock = ["pnpm-lock.yaml", "yarn.lock", "package-lock.json"].map((f) => join4(root2, f)).find(existsSync3);
+  const lock = ["pnpm-lock.yaml", "yarn.lock", "package-lock.json"].map((f) => join4(root2, f)).find(existsSync4);
   if (lock && statSync(lock).mtimeMs > statSync(modules).mtimeMs + 1e3) {
     return [{ level: "warn", title: "lockfile is newer than node_modules", detail: "dependencies may be out of date", fix: "Re-run install." }];
   }
@@ -38754,7 +38766,7 @@ function checkEnv(root2) {
   return findings;
 }
 async function checkDocker(root2) {
-  const uses = ["Dockerfile", "docker-compose.yml", "docker-compose.yaml", "compose.yaml", "compose.yml"].some((f) => existsSync3(join4(root2, f)));
+  const uses = ["Dockerfile", "docker-compose.yml", "docker-compose.yaml", "compose.yaml", "compose.yml"].some((f) => existsSync4(join4(root2, f)));
   if (!uses) return [];
   const info = await out("docker", ["info", "--format", "{{.ServerVersion}}"], 6e3);
   if (info === void 0) return [];
@@ -38935,7 +38947,7 @@ async function viewGraph(port = 4747) {
     if (req.url?.startsWith("/graph.json")) {
       const graph = loadGraph(root2);
       res.setHeader("content-type", "application/json");
-      res.end(JSON.stringify({ graph, stale: staleMap(root2, graph) }));
+      res.end(JSON.stringify({ graph, stale: staleMap(root2, graph), file: graphPath(root2) }));
     } else {
       res.setHeader("content-type", "text/html; charset=utf-8");
       res.end(PAGE);
@@ -38943,7 +38955,8 @@ async function viewGraph(port = 4747) {
   });
   await new Promise((resolve4, reject) => server2.once("error", reject).listen(port, "127.0.0.1", resolve4));
   const url2 = `http://127.0.0.1:${port}`;
-  console.log(`project memory graph \u2192 ${url2}  (Ctrl+C to stop)`);
+  console.log(`project memory graph \u2192 ${url2}  (Ctrl+C to stop)
+reading ${graphPath(root2)}`);
   const opener = platform2() === "darwin" ? "open" : platform2() === "win32" ? "cmd" : "xdg-open";
   execFile2(opener, platform2() === "win32" ? ["/c", "start", "", url2] : [url2], () => {
   });
@@ -38964,21 +38977,21 @@ input[type=text]{width:100%;padding:6px 8px;background:var(--bg);color:var(--fg)
 input[type=range]{width:100%}.mut{color:var(--mut);font-size:12px}pre{white-space:pre-wrap;font:12px/1.5 ui-monospace,monospace}
 .row{margin:10px 0}.warn{color:#f59e0b}</style>
 <div id=main><canvas id=c></canvas></div>
-<div id=side><h1>Project memory</h1><div class=row><input id=q type=text placeholder="filter…"></div>
+<div id=side><h1>Project memory</h1><div class="mut" id=where></div><div class=row id=empty style="display:none"><b>Nothing here yet.</b><div class=mut>This page shows exactly the file above. Memory is added when your AI calls <code>remember</code> / <code>log_session</code>, or automatically when Claude Code (the /tree mod) or OpenCode (the sidebar plugin) finishes a turn that edited files. If your project is elsewhere, run <code>graph</code> from that folder or set MEMORY_ROOT.</div></div><div class=row><input id=q type=text placeholder="filter…"></div>
 <div class=row><div class=mut>time travel: <span id=when></span></div><input id=t type=range min=0 max=1000 value=1000></div>
 <div class=row id=legend></div><div class=row id=info class=mut>Click a node. Drag to move. Orange ring = linked files changed since (possibly outdated).</div></div>
 <script>
 const COL={decision:'#6aa9ff',note:'#7ee0a0',task:'#f0c36a',session:'#c08bff',file:'#8b93a1'};
-let G,stale={},nodes=[],edges=[],sel=null,hov=null,drag=null,maxT,minT;
+let G,stale={},FILE='',nodes=[],edges=[],sel=null,hov=null,drag=null,maxT,minT;
 const cv=document.getElementById('c'),cx=cv.getContext('2d');
 function size(){cv.width=cv.clientWidth*devicePixelRatio;cv.height=cv.clientHeight*devicePixelRatio;cx.setTransform(devicePixelRatio,0,0,devicePixelRatio,0,0)}
 addEventListener('resize',size);
-async function load(){const r=await (await fetch('/graph.json')).json();G=r.graph;stale=r.stale;
+async function load(){const r=await (await fetch('/graph.json')).json();G=r.graph;stale=r.stale;FILE=r.file;
  const old=new Map(nodes.map(n=>[n.id,n]));
  nodes=G.nodes.map(n=>Object.assign(old.get(n.id)||{x:cv.clientWidth/2+Math.random()*200-100,y:cv.clientHeight/2+Math.random()*200-100,vx:0,vy:0},n));
  const by=new Map(nodes.map(n=>[n.id,n]));edges=G.edges.map(e=>({a:by.get(e.from),b:by.get(e.to),type:e.type})).filter(e=>e.a&&e.b);
  const ts=nodes.map(n=>n.at);minT=Math.min(...ts,Date.now());maxT=Math.max(...ts,Date.now());
- document.getElementById('legend').innerHTML=Object.entries(COL).map(([k,c])=>'<span style="margin-right:10px"><i class=k style="background:'+c+'"></i>'+k+'</span>').join('')}
+ document.getElementById('where').textContent=FILE+' · '+nodes.length+' nodes';document.getElementById('empty').style.display=nodes.length?'none':'block';document.getElementById('legend').innerHTML=Object.entries(COL).map(([k,c])=>'<span style="margin-right:10px"><i class=k style="background:'+c+'"></i>'+k+'</span>').join('')}
 const T=()=>minT+(maxT-minT)*document.getElementById('t').value/1000;
 const vis=n=>n.at<=T()&&(!q.value||(n.title+' '+(n.why||'')).toLowerCase().includes(q.value.toLowerCase())||n.kind==='file'&&edges.some(e=>(e.a===n||e.b===n)&&(e.a.title+e.b.title).toLowerCase().includes(q.value.toLowerCase())));
 const q=document.getElementById('q');

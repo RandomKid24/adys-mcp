@@ -2,7 +2,7 @@
 import { execFile } from "node:child_process"
 import { createServer } from "node:http"
 import { platform } from "node:os"
-import { loadGraph, memoryRoot, staleMap } from "./store.ts"
+import { graphPath, loadGraph, memoryRoot, staleMap } from "./store.ts"
 
 const PAGE = String.raw`<!doctype html><meta charset=utf-8><title>project memory</title>
 <style>
@@ -15,21 +15,21 @@ input[type=text]{width:100%;padding:6px 8px;background:var(--bg);color:var(--fg)
 input[type=range]{width:100%}.mut{color:var(--mut);font-size:12px}pre{white-space:pre-wrap;font:12px/1.5 ui-monospace,monospace}
 .row{margin:10px 0}.warn{color:#f59e0b}</style>
 <div id=main><canvas id=c></canvas></div>
-<div id=side><h1>Project memory</h1><div class=row><input id=q type=text placeholder="filter…"></div>
+<div id=side><h1>Project memory</h1><div class="mut" id=where></div><div class=row id=empty style="display:none"><b>Nothing here yet.</b><div class=mut>This page shows exactly the file above. Memory is added when your AI calls <code>remember</code> / <code>log_session</code>, or automatically when Claude Code (the /tree mod) or OpenCode (the sidebar plugin) finishes a turn that edited files. If your project is elsewhere, run <code>graph</code> from that folder or set MEMORY_ROOT.</div></div><div class=row><input id=q type=text placeholder="filter…"></div>
 <div class=row><div class=mut>time travel: <span id=when></span></div><input id=t type=range min=0 max=1000 value=1000></div>
 <div class=row id=legend></div><div class=row id=info class=mut>Click a node. Drag to move. Orange ring = linked files changed since (possibly outdated).</div></div>
 <script>
 const COL={decision:'#6aa9ff',note:'#7ee0a0',task:'#f0c36a',session:'#c08bff',file:'#8b93a1'};
-let G,stale={},nodes=[],edges=[],sel=null,hov=null,drag=null,maxT,minT;
+let G,stale={},FILE='',nodes=[],edges=[],sel=null,hov=null,drag=null,maxT,minT;
 const cv=document.getElementById('c'),cx=cv.getContext('2d');
 function size(){cv.width=cv.clientWidth*devicePixelRatio;cv.height=cv.clientHeight*devicePixelRatio;cx.setTransform(devicePixelRatio,0,0,devicePixelRatio,0,0)}
 addEventListener('resize',size);
-async function load(){const r=await (await fetch('/graph.json')).json();G=r.graph;stale=r.stale;
+async function load(){const r=await (await fetch('/graph.json')).json();G=r.graph;stale=r.stale;FILE=r.file;
  const old=new Map(nodes.map(n=>[n.id,n]));
  nodes=G.nodes.map(n=>Object.assign(old.get(n.id)||{x:cv.clientWidth/2+Math.random()*200-100,y:cv.clientHeight/2+Math.random()*200-100,vx:0,vy:0},n));
  const by=new Map(nodes.map(n=>[n.id,n]));edges=G.edges.map(e=>({a:by.get(e.from),b:by.get(e.to),type:e.type})).filter(e=>e.a&&e.b);
  const ts=nodes.map(n=>n.at);minT=Math.min(...ts,Date.now());maxT=Math.max(...ts,Date.now());
- document.getElementById('legend').innerHTML=Object.entries(COL).map(([k,c])=>'<span style="margin-right:10px"><i class=k style="background:'+c+'"></i>'+k+'</span>').join('')}
+ document.getElementById('where').textContent=FILE+' · '+nodes.length+' nodes';document.getElementById('empty').style.display=nodes.length?'none':'block';document.getElementById('legend').innerHTML=Object.entries(COL).map(([k,c])=>'<span style="margin-right:10px"><i class=k style="background:'+c+'"></i>'+k+'</span>').join('')}
 const T=()=>minT+(maxT-minT)*document.getElementById('t').value/1000;
 const vis=n=>n.at<=T()&&(!q.value||(n.title+' '+(n.why||'')).toLowerCase().includes(q.value.toLowerCase())||n.kind==='file'&&edges.some(e=>(e.a===n||e.b===n)&&(e.a.title+e.b.title).toLowerCase().includes(q.value.toLowerCase())));
 const q=document.getElementById('q');
@@ -62,7 +62,7 @@ export async function viewGraph(port = 4747): Promise<void> {
     if (req.url?.startsWith("/graph.json")) {
       const graph = loadGraph(root)
       res.setHeader("content-type", "application/json")
-      res.end(JSON.stringify({ graph, stale: staleMap(root, graph) }))
+      res.end(JSON.stringify({ graph, stale: staleMap(root, graph), file: graphPath(root) }))
     } else {
       res.setHeader("content-type", "text/html; charset=utf-8")
       res.end(PAGE)
@@ -71,7 +71,7 @@ export async function viewGraph(port = 4747): Promise<void> {
   // Loopback only: the graph can contain private project notes.
   await new Promise<void>((resolve, reject) => server.once("error", reject).listen(port, "127.0.0.1", resolve))
   const url = `http://127.0.0.1:${port}`
-  console.log(`project memory graph → ${url}  (Ctrl+C to stop)`)
+  console.log(`project memory graph → ${url}  (Ctrl+C to stop)\nreading ${graphPath(root)}`)
   const opener = platform() === "darwin" ? "open" : platform() === "win32" ? "cmd" : "xdg-open"
   execFile(opener, platform() === "win32" ? ["/c", "start", "", url] : [url], () => {})
 }
