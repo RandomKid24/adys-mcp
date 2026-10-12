@@ -6,6 +6,11 @@ import { dirname, join } from "node:path"
 import { fileURLToPath } from "node:url"
 
 const NAME = "file-tree"
+// Two servers from one package; the second is selected by the `memory` argument.
+const SERVERS = [
+  { name: NAME, extra: [] as string[] },
+  { name: "project-memory", extra: ["memory"] },
+]
 const MOD = "file-tree-pane"
 const win = platform() === "win32"
 // Windows can't spawn `npx` directly (it's npx.cmd); route through cmd.
@@ -14,7 +19,7 @@ const home = homedir()
 const PKG_DIR = dirname(fileURLToPath(import.meta.url))
 
 /** Add (or remove) our entry under `data[keyPath][NAME]` in a JSON config. */
-function patchJson(file: string, keyPath: string, entry: unknown, remove: boolean): string {
+function patchJson(file: string, keyPath: string, name: string, entry: unknown, remove: boolean): string {
   if (!existsSync(file)) {
     if (remove) return "not installed"
     mkdirSync(dirname(file), { recursive: true })
@@ -28,10 +33,10 @@ function patchJson(file: string, keyPath: string, entry: unknown, remove: boolea
     }
   }
   const bucket = (data[keyPath] ??= {})
-  if (remove ? !bucket[NAME] : bucket[NAME]) return remove ? "not installed" : "already installed"
+  if (remove ? !bucket[name] : bucket[name]) return remove ? "not installed" : "already installed"
   if (existsSync(file)) copyFileSync(file, `${file}.bak`)
-  if (remove) delete bucket[NAME]
-  else bucket[NAME] = entry
+  if (remove) delete bucket[name]
+  else bucket[name] = entry
   writeFileSync(file, JSON.stringify(data, null, 2) + "\n")
   return remove ? "removed" : "installed"
 }
@@ -65,7 +70,7 @@ function patchPlugin(dir: string, configFile: string, remove: boolean): string {
   return "installed"
 }
 
-const stdio = { command: CMD, args: ARGS }
+const stdio = (extra: string[]) => ({ command: CMD, args: [...ARGS, ...extra] })
 const appSupport =
   platform() === "darwin"
     ? join(home, "Library/Application Support")
@@ -79,7 +84,8 @@ interface Client {
   run: (remove: boolean) => string
 }
 
-const mcpServers = (file: string) => (remove: boolean) => patchJson(file, "mcpServers", stdio, remove)
+const mcpServers = (file: string) => (remove: boolean) =>
+  SERVERS.map((s) => `${s.name} ${patchJson(file, "mcpServers", s.name, stdio(s.extra), remove)}`).join("; ")
 
 const clients: Client[] = [
   {
@@ -96,10 +102,16 @@ const clients: Client[] = [
       }
       const outcome = (err: string, done: string): string =>
         !err ? done : /already (exists|installed)/i.test(err) ? "already installed" : /not found|no .*server found|not installed/i.test(err) ? "not installed" : "failed (is `claude` on PATH?)"
-      const mcp = outcome(
-        remove ? claude("mcp", "remove", "--scope", "user", NAME) : claude("mcp", "add", "--scope", "user", NAME, "--", CMD, ...ARGS),
-        remove ? "removed" : "installed",
-      )
+      const mcp = SERVERS.map(
+        (srv) =>
+          `${srv.name} ` +
+          outcome(
+            remove
+              ? claude("mcp", "remove", "--scope", "user", srv.name)
+              : claude("mcp", "add", "--scope", "user", srv.name, "--", CMD, ...ARGS, ...srv.extra),
+            remove ? "removed" : "installed",
+          ),
+      ).join("; ")
       // The /tree pane draws in the terminal itself, so it costs no tokens (unlike the MCP tools).
       let pane: string
       if (remove) pane = outcome(claude("plugin", "uninstall", `${MOD}@adys-mcp`), "removed")
@@ -107,7 +119,7 @@ const clients: Client[] = [
         claude("plugin", "marketplace", "add", "RandomKid24/adys-mcp")
         pane = outcome(claude("plugin", "install", `${MOD}@adys-mcp`), "installed")
       }
-      return `MCP tools ${mcp}; /tree pane ${pane}`
+      return `${mcp}; /tree pane ${pane}`
     },
   },
   { name: "Claude Desktop", detect: join(appSupport, "Claude"), run: mcpServers(join(appSupport, "Claude/claude_desktop_config.json")) },
@@ -126,8 +138,10 @@ const clients: Client[] = [
     run(remove) {
       const dir = join(home, ".config/opencode")
       const file = existsSync(join(dir, "opencode.json")) ? join(dir, "opencode.json") : join(dir, "opencode.jsonc")
-      // The plugin already provides the sidebar and the edited-files tool, so no MCP entry here.
-      return `sidebar plugin ${patchPlugin(dir, file, remove)}`
+      // The plugin already provides the sidebar and edited-files tool, so only project-memory needs an MCP entry.
+      const memory = SERVERS[1]!
+      const entry = { type: "local", command: [CMD, ...ARGS, ...memory.extra], enabled: true }
+      return `sidebar plugin ${patchPlugin(dir, file, remove)}; ${memory.name} ${patchJson(file, "mcp", memory.name, entry, remove)}`
     },
   },
   {
@@ -135,15 +149,18 @@ const clients: Client[] = [
     detect: join(home, ".codex"),
     run(remove) {
       const file = join(home, ".codex/config.toml")
-      const text = existsSync(file) ? readFileSync(file, "utf8") : ""
-      const header = `[mcp_servers.${NAME}]`
-      const has = text.includes(header)
-      if (remove ? !has : has) return remove ? "not installed" : "already installed"
-      if (text) copyFileSync(file, `${file}.bak`)
-      // header line, then every following line that isn't a new [table]
-      const block = new RegExp(`\\n?\\[mcp_servers\\.${NAME}\\]\\n(?:[^\\[\\n].*\\n?)*`)
-      writeFileSync(file, remove ? text.replace(block, "") : `${text}\n${header}\ncommand = "${CMD}"\nargs = ${JSON.stringify(ARGS)}\n`)
-      return remove ? "removed" : "installed"
+      return SERVERS.map((srv) => {
+        const text = existsSync(file) ? readFileSync(file, "utf8") : ""
+        const header = `[mcp_servers.${srv.name}]`
+        const has = text.includes(header)
+        if (remove ? !has : has) return `${srv.name} ${remove ? "not installed" : "already installed"}`
+        if (text) copyFileSync(file, `${file}.bak`)
+        // header line, then every following line that isn't a new [table]
+        const block = new RegExp(`\\n?\\[mcp_servers\\.${srv.name}\\]\\n(?:[^\\[\\n].*\\n?)*`)
+        const args = [...ARGS, ...srv.extra]
+        writeFileSync(file, remove ? text.replace(block, "") : `${text}\n${header}\ncommand = "${CMD}"\nargs = ${JSON.stringify(args)}\n`)
+        return `${srv.name} ${remove ? "removed" : "installed"}`
+      }).join("; ")
     },
   },
 ]

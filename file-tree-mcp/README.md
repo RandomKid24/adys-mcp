@@ -5,6 +5,10 @@ A file tree for AI coding agents, in two parts:
 1. **Universal MCP server** — works in any MCP client. Tools: `file_tree` (project tree, changed files tagged `[A]` `[M]` `[D]` with `+N -M`), `edited_files` (uncommitted changes, from git), `search_files` (find files by path) and `read_file` (text files in the project, optional line range; paths outside the root are refused).
 2. **OpenCode sidebar plugin** — a live tree that highlights files as the agent edits them ([jump to it](#opencode-sidebar-plugin)).
 
+## Also in this package: project-memory
+
+Second MCP server (`npx -y github:RandomKid24/adys-mcp memory`, registered by `install`) and a graph viewer (`... graph [port]`). See the [root README](../README.md). Unit check: `node src/memory/core.test.ts`.
+
 ## Install (MCP server)
 
 Needs Node >= 18 and `git`. In Claude Code the tools are used by asking ("show the file tree"), or via the slash commands `/mcp__file-tree__tree` and `/mcp__file-tree__changes`; check with `/mcp`.

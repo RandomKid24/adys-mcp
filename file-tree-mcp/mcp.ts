@@ -9,6 +9,17 @@ import { relative, resolve } from "node:path"
 import { z } from "zod"
 import { createIgnore, isIgnored } from "./src/lib/ignore.ts"
 
+if (process.argv[2] === "memory") {
+  await (await import("./src/memory/server.ts")).serve()
+  await new Promise<void>((done) => process.stdin.on("close", done)) // run until the client disconnects
+  process.exit(0)
+}
+
+if (process.argv[2] === "graph") {
+  await (await import("./src/memory/viewer.ts")).viewGraph(Number(process.argv[3]) || undefined)
+  await new Promise(() => {})
+}
+
 if (process.argv[2] === "install" || process.argv[2] === "uninstall") {
   ;(await import("./src/install.ts")).install(process.argv[2] === "uninstall")
   process.exit(0)

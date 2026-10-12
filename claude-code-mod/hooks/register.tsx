@@ -272,8 +272,8 @@ async function search($: any, query: string): Promise<number> {
   return hits.length
 }
 
-/** Mark the file the agent just touched and open its folders. */
-async function markActive($: any, absolute: string): Promise<void> {
+/** Mark the file the agent just touched and open its folders; returns its project-relative path. */
+async function markActive($: any, absolute: string): Promise<string> {
   const entries = await read($, tree)
   let best = ''
   for (const entry of entries) {
@@ -281,7 +281,7 @@ async function markActive($: any, absolute: string): Promise<void> {
       best = entry.path
     }
   }
-  if (!best) return
+  if (!best) return ''
   await update($, active, () => best)
   const parts = best.split('/')
   await update($, open, all => {
@@ -289,9 +289,34 @@ async function markActive($: any, absolute: string): Promise<void> {
     for (let i = 1; i < parts.length; i++) next[parts.slice(0, i).join('/')] = true
     return next
   })
+  return best
+}
+
+/** project-memory: add the files this turn touched to today's session node in .memory/graph.json. */
+async function flushSession($: any, files: string[]): Promise<void> {
+  if (files.length === 0) return
+  const now: number = await $.clock.now()
+  const day = new Date(now).toISOString().slice(0, 10)
+  let graph: any
+  try {
+    graph = JSON.parse(await $.fs.read('.memory/graph.json'))
+  } catch {
+    graph = undefined
+  }
+  if (!graph || !Array.isArray(graph.nodes) || !Array.isArray(graph.edges)) graph = { version: 1, nodes: [], edges: [] }
+  const sid = `session:${day}`
+  if (!graph.nodes.some((n: any) => n.id === sid)) graph.nodes.push({ id: sid, kind: 'session', title: `Session ${day}`, at: now })
+  for (const file of files) {
+    const fid = `file:${file}`
+    if (!graph.nodes.some((n: any) => n.id === fid)) graph.nodes.push({ id: fid, kind: 'file', title: file, at: now })
+    if (!graph.edges.some((x: any) => x.from === sid && x.to === fid)) graph.edges.push({ from: sid, to: fid, type: 'touched' })
+  }
+  await $.fs.write('.memory/graph.json', JSON.stringify(graph, null, 2) + '\n')
 }
 
 export const register: Register = on => {
+  let touched: string[] = []
+
   on('session.start', async ($, e, next) => {
     await $.command.register({ name: 'tree', description: 'Show the project file tree with git changes (free, no tokens)' })
     await $.command.register({ name: 'find', description: 'Search file contents and open a match (free, no tokens)', argumentHint: '<text>' })
@@ -314,13 +339,21 @@ export const register: Register = on => {
     const ran = await next(e)
     if (['Edit', 'Write', 'MultiEdit', 'NotebookEdit', 'Bash'].includes(e.tool)) {
       const target = String((e as any).file_path ?? (e as any).notebook_path ?? '')
-      void refresh($).then(() => (target ? markActive($, target) : undefined)).catch(() => {})
+      void refresh($)
+        .then(() => (target ? markActive($, target) : ''))
+        .then(rel => {
+          if (rel && !touched.includes(rel)) touched.push(rel)
+        })
+        .catch(() => {})
     }
     return ran
   })
 
   on('turn.complete', async ($, e, next) => {
     await update($, active, () => '')
+    const files = touched
+    touched = []
+    await flushSession($, files).catch(() => {})
     return next(e)
   })
 

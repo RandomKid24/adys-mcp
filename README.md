@@ -39,6 +39,23 @@ Undo with `npx -y github:RandomKid24/adys-mcp uninstall`.
 
 **On OpenCode it goes further:** a live sidebar that highlights files as the agent edits them. See the [package README](./file-tree-mcp/README.md).
 
+## [`project-memory`](./file-tree-mcp/src/memory) — one memory for every AI tool
+
+A shared, git-aware memory graph for your project. Decisions (with the **why** and what was rejected), notes, tasks and sessions, linked to the files they concern, stored in `.memory/graph.json` in your repo — readable, committable, shared by Claude Code, Codex, Cursor, OpenCode, Kiro and the rest.
+
+| Tool | What it does |
+| ---- | ------------ |
+| `remember` | Save a decision / note / task, linked to files. |
+| `recall` | Search memory; returns only the matching memories + their files. |
+| `file_memory` | Everything remembered about one file. |
+| `log_session` | Record what a session did. |
+| `stale_memories` | Memories whose files changed in git since — likely outdated. |
+| `link_memories` / `forget` | Connect or delete memories. |
+
+- **Sessions fill in automatically** in Claude Code (via the `/tree` mod) and OpenCode (via the sidebar plugin): files touched are recorded on a per-day session node. Other clients save through the tools.
+- **See it:** `npx -y github:RandomKid24/adys-mcp graph` opens a local web graph — drag nodes, filter, time-travel slider, orange ring = possibly outdated. Costs no tokens.
+- Installed by the same one command above (`install` registers both servers).
+
 ## License
 
 MIT © Ady
