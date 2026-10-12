@@ -292,30 +292,7 @@ async function markActive($: any, absolute: string): Promise<string> {
   return best
 }
 
-/** project-memory: add the files this turn touched to today's session node in .memory/graph.json. */
-async function flushSession($: any, files: string[]): Promise<void> {
-  if (files.length === 0) return
-  const now: number = await $.clock.now()
-  const day = new Date(now).toISOString().slice(0, 10)
-  let graph: any
-  try {
-    graph = JSON.parse(await $.fs.read('.memory/graph.json'))
-  } catch {
-    graph = undefined
-  }
-  if (!graph || !Array.isArray(graph.nodes) || !Array.isArray(graph.edges)) graph = { version: 1, nodes: [], edges: [] }
-  const sid = `session:${day}`
-  if (!graph.nodes.some((n: any) => n.id === sid)) graph.nodes.push({ id: sid, kind: 'session', title: `Session ${day}`, at: now })
-  for (const file of files) {
-    const fid = `file:${file}`
-    if (!graph.nodes.some((n: any) => n.id === fid)) graph.nodes.push({ id: fid, kind: 'file', title: file, at: now })
-    if (!graph.edges.some((x: any) => x.from === sid && x.to === fid)) graph.edges.push({ from: sid, to: fid, type: 'touched' })
-  }
-  await $.fs.write('.memory/graph.json', JSON.stringify(graph, null, 2) + '\n')
-}
-
 export const register: Register = on => {
-  let touched: string[] = []
   let isRefreshing = false // one rescan at a time: each one spawns several git processes
 
   on('session.start', async ($, e, next) => {
@@ -344,9 +321,6 @@ export const register: Register = on => {
         isRefreshing = true
         void refresh($)
           .then(() => (target ? markActive($, target) : ''))
-          .then(rel => {
-            if (rel && !touched.includes(rel)) touched.push(rel)
-          })
           .catch(() => {})
           .then(() => {
             isRefreshing = false
@@ -358,9 +332,6 @@ export const register: Register = on => {
 
   on('turn.complete', async ($, e, next) => {
     await update($, active, () => '')
-    const files = touched
-    touched = []
-    await flushSession($, files).catch(() => {})
     return next(e)
   })
 

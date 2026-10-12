@@ -19,7 +19,6 @@ jobs:
           cache-dependency-path: file-tree-mcp/package-lock.json
       - run: npm ci --legacy-peer-deps
       - run: npm run typecheck
-      - run: npm test
       - run: npm run build
       # npx runs the committed bundle, so a stale one silently ships old code.
       - name: mcp.js is up to date

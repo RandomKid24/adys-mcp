@@ -9,40 +9,6 @@ import { relative, resolve } from "node:path"
 import { z } from "zod"
 import { createIgnore, isIgnored } from "./src/lib/ignore.ts"
 
-if (["add", "remove", "list", "catalog"].includes(process.argv[2] ?? "")) {
-  process.exit((await import("./src/mcpctl.ts")).mcpctl(process.argv.slice(2)))
-}
-
-if (process.argv[2] === "memory") {
-  const memory = await import("./src/memory/server.ts")
-  if (process.argv[3] === "status") {
-    console.log(memory.status())
-    process.exit(0)
-  }
-  if (process.argv[3] === "watch") {
-    // Foreground capture without any AI client: edit files elsewhere and watch them get recorded.
-    memory.watchChanges(process.env.MEMORY_ROOT ?? (await import("./src/memory/store.ts")).memoryRoot(), (m) => console.log(m))
-    console.log(`watching ${(await import("./src/memory/store.ts")).memoryRoot()} — edit a file; Ctrl+C to stop`)
-    await new Promise(() => {})
-  }
-  await memory.serve()
-  await new Promise<void>((done) => process.stdin.on("close", done)) // run until the client disconnects
-  process.exit(0)
-}
-
-if (process.argv[2] === "doctor") {
-  const doctor = await import("./src/doctor/server.ts")
-  if (process.argv[3] === "--report") process.exit(await doctor.report())
-  await doctor.serve()
-  await new Promise<void>((done) => process.stdin.on("close", done)) // run until the client disconnects
-  process.exit(0)
-}
-
-if (process.argv[2] === "graph") {
-  await (await import("./src/memory/viewer.ts")).viewGraph(Number(process.argv[3]) || undefined)
-  await new Promise(() => {})
-}
-
 if (process.argv[2] === "install" || process.argv[2] === "uninstall") {
   ;(await import("./src/install.ts")).install(process.argv[2] === "uninstall")
   process.exit(0)

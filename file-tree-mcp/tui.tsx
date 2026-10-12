@@ -3,7 +3,6 @@ import { Show } from "solid-js"
 import { FileTree } from "./src/components/FileTree.tsx"
 import { resolveConfig, type SettingsState, type UiState } from "./src/lib/config.ts"
 import { isIgnored } from "./src/lib/ignore.ts"
-import { captureSession } from "./src/memory/capture.ts"
 import { openEditor } from "./src/components/Editor.tsx"
 import { toRelative } from "./src/lib/paths.ts"
 
@@ -73,11 +72,7 @@ export default Plugin.define({
       // A completed/failed tool is the moment an edit lands; refresh highlights.
       context.data.on("session.tool.success", () => bump("editTick")),
       context.data.on("session.tool.failed", () => bump("editTick")),
-      context.data.on("session.execution.succeeded", (event) => {
-        bump("editTick")
-        const location = context.location ?? context.data.location.default()
-        void captureSession(context.client, location, location.directory, event.data.sessionID)
-      }),
+      context.data.on("session.execution.succeeded", () => bump("editTick")),
       // The workspace watcher fires for real filesystem changes (including edits
       // made outside the agent), so rescan the tree and track deletions.
       context.data.on("filesystem.changed", (event) => {

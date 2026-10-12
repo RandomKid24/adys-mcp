@@ -9,12 +9,7 @@ const PACKAGE = "github:RandomKid24/adys-mcp"
 const MOD = "file-tree-pane"
 const PKG_DIR = dirname(fileURLToPath(import.meta.url))
 
-/** Our three servers all come from this package; the second argument picks one. */
-export const OURS: Server[] = [
-  { name: "file-tree", command: "npx", args: ["-y", PACKAGE] },
-  { name: "project-memory", command: "npx", args: ["-y", PACKAGE, "memory"] },
-  { name: "env-doctor", command: "npx", args: ["-y", PACKAGE, "doctor"] },
-]
+const SERVER: Server = { name: "file-tree", command: "npx", args: ["-y", PACKAGE] }
 
 /** Copy the sidebar plugin next to the OpenCode config and list it under `plugins` (or undo that). */
 function patchPlugin(configFile: string, remove: boolean): string {
@@ -66,8 +61,8 @@ export function install(remove = false): void {
   const found = detected()
   if (found.length === 0) console.log("No supported MCP clients detected.")
   for (const client of found) {
-    const parts = OURS.filter((s) => !(client.id === "opencode" && s.name === "file-tree")) // the plugin replaces it there
-      .map((s) => `${s.name} ${remove ? client.remove(s.name) : client.add(s)}`)
+    // On OpenCode the sidebar plugin replaces the MCP server.
+    const parts = client.id === "opencode" ? [] : [`${SERVER.name} ${remove ? client.remove(SERVER.name) : client.add(SERVER)}`]
     if (client.id === "opencode") parts.unshift(`sidebar plugin ${patchPlugin(opencodeFile(), remove)}`)
     if (client.id === "claude-code") parts.push(`/tree pane ${claudePane(remove)}`)
     console.log(`${client.name.padEnd(15)} ${parts.join("; ")}`)
