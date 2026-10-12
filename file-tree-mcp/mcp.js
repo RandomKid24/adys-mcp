@@ -36961,4 +36961,15 @@ server.registerTool(
     }
   }
 );
+var say = (text) => ({ messages: [{ role: "user", content: { type: "text", text } }] });
+server.registerPrompt(
+  "tree",
+  { description: "Show the project file tree with changed files marked" },
+  () => say("Call the file_tree tool and show me the project tree, calling out files that changed.")
+);
+server.registerPrompt(
+  "changes",
+  { description: "List files changed since the last commit" },
+  () => say("Call the edited_files tool and summarize what changed, per file.")
+);
 await server.connect(new StdioServerTransport());

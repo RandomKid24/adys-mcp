@@ -7,7 +7,7 @@ A file tree for AI coding agents, in two parts:
 
 ## Install (MCP server)
 
-Needs Node >= 18 and `git`.
+Needs Node >= 18 and `git`. In Claude Code the tools are used by asking ("show the file tree"), or via the slash commands `/mcp__file-tree__tree` and `/mcp__file-tree__changes`; check with `/mcp`.
 
 ```bash
 npx -y github:RandomKid24/adys-mcp install
