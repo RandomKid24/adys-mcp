@@ -1,0 +1,9 @@
+{
+  "name": "adys-mcp",
+  "version": "0.3.0",
+  "description": "File tree MCP server for AI coding agents.",
+  "license": "MIT",
+  "type": "module",
+  "bin": "file-tree-mcp/mcp.js",
+  "files": ["file-tree-mcp/mcp.js"]
+}

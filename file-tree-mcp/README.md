@@ -7,7 +7,9 @@ Two things in one package:
 
 ## Universal MCP setup
 
-Needs Node >= 22.18 and `git`. Project root = the client's cwd, or pass it as the first argument.
+Needs Node >= 18 and `git`. One command (Claude Code): `claude mcp add file-tree -- npx -y github:RandomKid24/adys-mcp`. The server ships prebuilt as `mcp.js`; rebuild with `npx esbuild` via `npm run build` after editing `mcp.ts`.
+
+Manual config: Project root = the client's cwd, or pass it as the first argument.
 
 ```jsonc
 // Claude Code / Cursor / Claude Desktop (mcpServers)
