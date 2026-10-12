@@ -7,6 +7,7 @@ declare module 'claude-code' {
       tree: Entry[]
       open: Record<string, boolean>
       changes: Record<string, Change>
+      note: string
     }
   }
 }

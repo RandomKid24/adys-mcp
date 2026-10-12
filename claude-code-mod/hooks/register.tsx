@@ -15,16 +15,18 @@ const IGNORE = new Set([
 const tree = atom({ plugin: 'file-tree-pane', key: 'tree' } as const, [])
 const open = atom({ plugin: 'file-tree-pane', key: 'open' } as const, {})
 const changes = atom({ plugin: 'file-tree-pane', key: 'changes' } as const, {})
+const note = atom({ plugin: 'file-tree-pane', key: 'note' } as const, '')
 
 
-async function scan($: any): Promise<Entry[]> {
+async function scan($: any, errors: string[]): Promise<Entry[]> {
   const out: Entry[] = []
   const walk = async (dir: string, depth: number): Promise<void> => {
     if (depth > MAX_DEPTH || out.length >= MAX_ENTRIES) return
     let list: Array<{ name: string; kind: string }>
     try {
       list = await $.fs.list(dir || undefined)
-    } catch {
+    } catch (error) {
+      errors.push(`${dir || '.'}: ${String(error)}`)
       return
     }
     list.sort((a, b) => Number(b.kind === 'dir') - Number(a.kind === 'dir') || a.name.localeCompare(b.name))
@@ -72,9 +74,17 @@ async function gitChanges($: any): Promise<Record<string, Change>> {
 }
 
 async function refresh($: any): Promise<void> {
-  const [entries, found] = await Promise.all([scan($), gitChanges($)])
+  const errors: string[] = []
+  let entries: Entry[] = []
+  let found: Record<string, Change> = {}
+  try {
+    ;[entries, found] = await Promise.all([scan($, errors), gitChanges($)])
+  } catch (error) {
+    errors.push(String(error))
+  }
   await update($, tree, () => entries)
   await update($, changes, () => found)
+  await update($, note, () => (errors.length ? `scan error — ${errors[0]}` : `${entries.length} entries`))
 }
 
 export const register: Register = on => {
@@ -101,6 +111,7 @@ export const register: Register = on => {
     const entries = await read($, tree)
     const found = await read($, changes)
     const toggled = await read($, open)
+    const info = await read($, note)
 
     // Folders holding changes open by default; the person's own toggles win.
     const withChanges = new Set<string>()
@@ -127,7 +138,7 @@ export const register: Register = on => {
         <Text bold>
           ◆ files{count > 0 ? <Text color="yellow"> ● {count}</Text> : null}
         </Text>
-        {rows.length === 0 && <Text dimColor>No files — run /tree again.</Text>}
+        {rows.length === 0 && <Text dimColor>No files ({info || 'not scanned yet'}) — run /tree again.</Text>}
         {rows.map(entry => {
           const pad = '  '.repeat(entry.depth)
           if (entry.isDir) {
