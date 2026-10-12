@@ -2,7 +2,7 @@
 
 A file tree for AI coding agents, in two parts:
 
-1. **Universal MCP server** — works in any MCP client. Tools: `file_tree` (project tree, changed files tagged `[A]` `[M]` `[D]` with `+N -M`) and `edited_files` (uncommitted changes, from git).
+1. **Universal MCP server** — works in any MCP client. Tools: `file_tree` (project tree, changed files tagged `[A]` `[M]` `[D]` with `+N -M`), `edited_files` (uncommitted changes, from git), `search_files` (find files by path) and `read_file` (text files in the project, optional line range; paths outside the root are refused).
 2. **OpenCode sidebar plugin** — a live tree that highlights files as the agent edits them ([jump to it](#opencode-sidebar-plugin)).
 
 ## Install (MCP server)
@@ -26,6 +26,12 @@ The project root is the client's cwd, or the first argument.
 
 ```bash
 claude mcp add file-tree -- npx -y github:RandomKid24/adys-mcp
+```
+
+### Uninstall
+
+```bash
+npx -y github:RandomKid24/adys-mcp uninstall
 ```
 
 ### Limits
@@ -75,6 +81,10 @@ my-project
   file watcher).
 - Edited-only mode when you only care about the diff surface.
 - **Click a file to open it in an editor dialog** — edit, `ctrl+s` to save, `esc` to close (text files up to 512 KB; saves through the OpenCode `file.write` API).
+- Closing the editor with unsaved changes asks **Discard / Keep editing** (Keep reopens your draft).
+- Git changes for **every** file (not just the agent's) are highlighted via `vcs.status`; turn off with `gitStatus: false`.
+- Source files are tinted by extension from the theme's syntax colors.
+- `/filetree-find` (search → open in editor) and `/filetree-new` (create a file, never overwrites).
 - A fixed-height, scrollable sidebar (mouse wheel) — never takes over the screen.
 - A server-side tool, `filetree_edited_files`, namespaced under `filetree`.
 - Walks the project through the OpenCode `file.list` API — no `node:fs`, no
@@ -152,6 +162,7 @@ Pass options with the object form of a `plugins` entry:
 | `includeSubagents` | `false`   |            | Also highlight files touched by child (subagent) sessions.         |
 | `maxDepth`         | `4`       | 1–12       | How many directory levels to walk below the project root.          |
 | `maxRows`          | `160`     | 10–2000    | Cap on collected/rendered rows, to keep the tree bounded.          |
+| `gitStatus`        | `true`    |            | Also highlight files git reports as changed.                       |
 | `sidebarRows`      | `15`      | 3–200      | Height of the sidebar tree; scroll for the rest.                   |
 | `expandDepth`      | `1`       | 1–12       | Directories expanded by default in the **sidebar** view.           |
 | `concurrency`      | `8`       | 1–32       | Maximum concurrent `file.list` requests while walking.             |
@@ -171,6 +182,8 @@ Available from the command palette and, where noted, as slash commands.
 | --------------------------------------------- | ----------------- | --------------------------------------------- |
 | File tree: show / hide                        | `/filetree`       | Toggle the sidebar tree. |
 | File tree: toggle edited-only view            | `/filetree-mode`  | Show just the edited files.                   |
+| File tree: find and edit a file               | `/filetree-find`  | Search by name, open the match in the editor. |
+| File tree: new file                           | `/filetree-new`   | Create an empty file and open it.             |
 | File tree: refresh                            | `/filetree-refresh` | Rescan the tree.                            |
 
 Clicking a folder row toggles just that folder.

@@ -9,11 +9,41 @@ interface Loaded {
   error?: string
 }
 
+type Ctx = ReturnType<typeof usePlugin>
+
+interface EditState {
+  dirty: boolean
+  /** Latest buffer contents, kept so a declined discard can reopen the draft. */
+  text?: string
+}
+
+/** Open the editor dialog; closing with unsaved changes asks before discarding. */
+export function openEditor(ctx: Ctx, path: string, location: LocationRef, onSaved: () => void, draft?: string): void {
+  const state: EditState = { dirty: draft !== undefined, text: draft }
+  ctx.ui.dialog.set({ size: "xlarge" })
+  ctx.ui.dialog.show(
+    () => <Editor path={path} location={location} onSaved={onSaved} state={state} />,
+    () => {
+      if (!state.dirty) return
+      void ctx.ui.dialog
+        .confirm({
+          title: "Discard changes?",
+          message: `${path} has unsaved changes.`,
+          label: { confirm: "Discard", cancel: "Keep editing" },
+        })
+        .then((discard) => {
+          if (!discard) openEditor(ctx, path, location, onSaved, state.text)
+        })
+    },
+  )
+}
+
 /** Edit a project file in a dialog: ctrl+s saves, esc closes. */
-export function Editor(props: { path: string; location: LocationRef; onSaved: () => void }) {
+function Editor(props: { path: string; location: LocationRef; onSaved: () => void; state: EditState }) {
   const ctx = usePlugin()
   const theme = ctx.theme.surface("dialog")
-  const [dirty, setDirty] = createSignal(false)
+  const [dirty, setDirty] = createSignal(props.state.dirty)
+  let original = ""
   const [status, setStatus] = createSignal<string | undefined>(undefined)
   let area: { plainText: string } | undefined
 
@@ -22,7 +52,8 @@ export function Editor(props: { path: string; location: LocationRef; onSaved: ()
       const bytes = await ctx.client.file.read({ location: props.location, path: props.path })
       if (bytes.byteLength > MAX_BYTES) return { error: `Too large to edit here (${Math.round(bytes.byteLength / 1024)} KB).` }
       if (bytes.includes(0)) return { error: "Binary file — not editable." }
-      return { text: new TextDecoder().decode(bytes) }
+      original = new TextDecoder().decode(bytes)
+      return { text: props.state.text ?? original }
     } catch (error) {
       return { error: `Could not read file: ${(error as Error).message}` }
     }
@@ -36,6 +67,8 @@ export function Editor(props: { path: string; location: LocationRef; onSaved: ()
         path: props.path,
         payload: new TextEncoder().encode(area.plainText),
       })
+      original = area.plainText
+      props.state.dirty = false
       setDirty(false)
       setStatus("saved")
       props.onSaved()
@@ -79,7 +112,11 @@ export function Editor(props: { path: string; location: LocationRef; onSaved: ()
               keyBindings={[{ name: "s", ctrl: true, action: "submit" }]}
               onSubmit={() => void save()}
               onContentChange={() => {
-                setDirty(true)
+                if (!area) return
+                const changed = area.plainText !== original
+                props.state.dirty = changed
+                props.state.text = area.plainText
+                setDirty(changed)
                 setStatus(undefined)
               }}
             />

@@ -5,7 +5,7 @@ import { createEffect, createMemo, createResource, createSignal, For, onCleanup,
 import type { Store } from "solid-js/store"
 import type { ResolvedConfig, SettingsState, UiState } from "../lib/config.ts"
 import { collectEdited, type EditStatus, type EditedFile } from "../lib/edited.ts"
-import { Editor } from "./Editor.tsx"
+import { openEditor } from "./Editor.tsx"
 import { fetchSessionMessages } from "../lib/messages.ts"
 import { baseName } from "../lib/paths.ts"
 import { flattenEdited, flattenTree, marker, type Row } from "../lib/render.ts"
@@ -75,7 +75,37 @@ export function FileTree(props: FileTreeProps) {
     },
     { initialValue: new Map<string, EditedFile>() },
   )
-  const edited = (): Map<string, EditedFile> => editedResource() ?? new Map<string, EditedFile>()
+
+  // Working-tree changes from git, so files edited outside the agent show up too.
+  const [git] = createResource(
+    () => ({ location: location(), tick: editTick(), refresh: props.ui.refresh }),
+    async (source) => {
+      if (!props.config.gitStatus) return []
+      try {
+        return (await ctx.client.vcs.status({ location: source.location })).data
+      } catch {
+        return [] // not a git repo / vcs unavailable
+      }
+    },
+    { initialValue: [] },
+  )
+
+  const edited = createMemo((): Map<string, EditedFile> => {
+    const map = new Map(editedResource() ?? [])
+    for (const change of git() ?? []) {
+      if (map.has(change.file)) continue
+      map.set(change.file, {
+        path: change.file,
+        count: 1,
+        last: 0,
+        status: change.status,
+        additions: change.additions,
+        deletions: change.deletions,
+        counted: true,
+      })
+    }
+    return map
+  })
 
   const [tree] = createResource(
     () => ({
@@ -137,11 +167,22 @@ export function FileTree(props: FileTreeProps) {
     return { additions, deletions, counted, files }
   }
 
+  const EXT_TOKENS: Record<string, keyof typeof theme.syntax> = {
+    ts: "type", tsx: "type", js: "function", jsx: "function", mjs: "function", py: "string", go: "type", rs: "keyword",
+    json: "number", yaml: "number", yml: "number", toml: "number", md: "comment", txt: "comment", css: "keyword",
+    scss: "keyword", html: "keyword", sh: "operator", sql: "variable",
+  }
+  /** Source files pick up a syntax hue by extension; anything unknown stays plain text. */
+  const extColor = (name: string): RGBA => {
+    const token = EXT_TOKENS[name.slice(name.lastIndexOf(".") + 1).toLowerCase()]
+    return token ? theme.syntax[token] : theme.text.base
+  }
+
   /** Folders in the accent hue (brighter when they hold edits), files in base text, edits by status. */
   const rowColor = (row: Row): RGBA => {
     if (row.edited) return statusColor(row.edited.status)
     if (row.kind === "dir") return dirTotals(row.path).files > 0 ? theme.hue.accent[400] : theme.hue.accent[600]
-    return theme.text.base
+    return extColor(row.name)
   }
 
   const statSpans = (additions: number, deletions: number) => (
@@ -166,12 +207,7 @@ export function FileTree(props: FileTreeProps) {
     props.onToggleDir?.(row.path, !row.open)
   }
 
-  const openFile = (row: Row): void => {
-    ctx.ui.dialog.set({ size: "xlarge" })
-    ctx.ui.dialog.show(() => (
-      <Editor path={row.path} location={location()} onSaved={() => props.onSaved?.()} />
-    ))
-  }
+  const openFile = (row: Row): void => openEditor(ctx, row.path, location(), () => props.onSaved?.())
 
   const rows = () => (
     <For each={flat().rows}>

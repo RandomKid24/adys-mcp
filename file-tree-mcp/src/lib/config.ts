@@ -34,6 +34,8 @@ export interface ResolvedConfig {
   maxDepth: number
   /** Upper bound on rendered rows, to keep the sidebar bounded. */
   maxRows: number
+  /** Also mark every file git reports as changed, not only the agent's edits. */
+  gitStatus: boolean
   /** Rows shown in the sidebar before collapsing into "+N more". */
   sidebarRows: number
   /** Directories at depth below this are expanded by default. */
@@ -68,6 +70,7 @@ export function resolveConfig(options: Readonly<Record<string, unknown>>): Resol
     includeSubagents: bool(options.includeSubagents, false),
     maxDepth: clampInt(options.maxDepth, 4, 1, 12),
     maxRows: clampInt(options.maxRows, 160, 10, 2000),
+    gitStatus: bool(options.gitStatus, true),
     sidebarRows: clampInt(options.sidebarRows, 15, 3, 200),
     expandDepth: clampInt(options.expandDepth, 1, 1, 12),
     concurrency: clampInt(options.concurrency, 8, 1, 32),

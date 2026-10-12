@@ -3883,49 +3883,49 @@ var require_fast_uri = __commonJS({
       schemelessOptions.skipEscape = true;
       return serialize(resolved, schemelessOptions);
     }
-    function resolveComponent(base, relative, options, skipNormalization) {
+    function resolveComponent(base, relative2, options, skipNormalization) {
       const target = {};
       if (!skipNormalization) {
         base = parse3(serialize(base, options), options);
-        relative = parse3(serialize(relative, options), options);
+        relative2 = parse3(serialize(relative2, options), options);
       }
       options = options || {};
-      if (!options.tolerant && relative.scheme) {
-        target.scheme = relative.scheme;
-        target.userinfo = relative.userinfo;
-        target.host = relative.host;
-        target.port = relative.port;
-        target.path = removeDotSegments(relative.path || "");
-        target.query = relative.query;
+      if (!options.tolerant && relative2.scheme) {
+        target.scheme = relative2.scheme;
+        target.userinfo = relative2.userinfo;
+        target.host = relative2.host;
+        target.port = relative2.port;
+        target.path = removeDotSegments(relative2.path || "");
+        target.query = relative2.query;
       } else {
-        if (relative.userinfo !== void 0 || relative.host !== void 0 || relative.port !== void 0) {
-          target.userinfo = relative.userinfo;
-          target.host = relative.host;
-          target.port = relative.port;
-          target.path = removeDotSegments(relative.path || "");
-          target.query = relative.query;
+        if (relative2.userinfo !== void 0 || relative2.host !== void 0 || relative2.port !== void 0) {
+          target.userinfo = relative2.userinfo;
+          target.host = relative2.host;
+          target.port = relative2.port;
+          target.path = removeDotSegments(relative2.path || "");
+          target.query = relative2.query;
         } else {
-          if (!relative.path) {
+          if (!relative2.path) {
             target.path = base.path;
-            if (relative.query !== void 0) {
-              target.query = relative.query;
+            if (relative2.query !== void 0) {
+              target.query = relative2.query;
             } else {
               target.query = base.query;
             }
           } else {
-            if (relative.path[0] === "/") {
-              target.path = removeDotSegments(relative.path);
+            if (relative2.path[0] === "/") {
+              target.path = removeDotSegments(relative2.path);
             } else {
               if ((base.userinfo !== void 0 || base.host !== void 0 || base.port !== void 0) && !base.path) {
-                target.path = "/" + relative.path;
+                target.path = "/" + relative2.path;
               } else if (!base.path) {
-                target.path = relative.path;
+                target.path = relative2.path;
               } else {
-                target.path = base.path.slice(0, base.path.lastIndexOf("/") + 1) + relative.path;
+                target.path = base.path.slice(0, base.path.lastIndexOf("/") + 1) + relative2.path;
               }
               target.path = removeDotSegments(target.path);
             }
-            target.query = relative.query;
+            target.query = relative2.query;
           }
           target.userinfo = base.userinfo;
           target.host = base.host;
@@ -3933,7 +3933,7 @@ var require_fast_uri = __commonJS({
         }
         target.scheme = base.scheme;
       }
-      target.fragment = relative.fragment;
+      target.fragment = relative2.fragment;
       return target;
     }
     function equal(uriA, uriB, options) {
@@ -7214,50 +7214,66 @@ __export(install_exports, {
   install: () => install
 });
 import { execFileSync } from "node:child_process";
-import { copyFileSync, cpSync, existsSync, mkdirSync, readFileSync, writeFileSync } from "node:fs";
+import { copyFileSync, cpSync, existsSync, mkdirSync, readFileSync, rmSync, writeFileSync } from "node:fs";
 import { homedir, platform } from "node:os";
 import { dirname, join } from "node:path";
 import { fileURLToPath } from "node:url";
-function patchJson(file2, keyPath, entry) {
+function patchJson(file2, keyPath, entry, remove) {
+  if (!existsSync(file2)) {
+    if (remove) return "not installed";
+    mkdirSync(dirname(file2), { recursive: true });
+  }
   let data = {};
   if (existsSync(file2)) {
     try {
       data = JSON.parse(readFileSync(file2, "utf8") || "{}");
     } catch {
-      return "skipped (config has comments/invalid JSON \u2014 add it manually)";
+      return "skipped (config has comments/invalid JSON \u2014 edit it manually)";
     }
-    copyFileSync(file2, `${file2}.bak`);
-  } else mkdirSync(dirname(file2), { recursive: true });
+  }
   const bucket = data[keyPath] ??= {};
-  if (bucket[NAME]) return "already installed";
-  bucket[NAME] = entry;
+  if (remove ? !bucket[NAME] : bucket[NAME]) return remove ? "not installed" : "already installed";
+  if (existsSync(file2)) copyFileSync(file2, `${file2}.bak`);
+  if (remove) delete bucket[NAME];
+  else bucket[NAME] = entry;
   writeFileSync(file2, JSON.stringify(data, null, 2) + "\n");
-  return "installed";
+  return remove ? "removed" : "installed";
 }
-function installPlugin(dir, configFile) {
-  if (!existsSync(join(PKG_DIR, "tui.tsx"))) return "skipped (plugin sources not in this package)";
+function patchPlugin(dir, configFile, remove) {
   const target = join(dir, "file-tree-plugin");
-  mkdirSync(target, { recursive: true });
-  for (const item of ["index.ts", "tui.tsx", "src"]) cpSync(join(PKG_DIR, item), join(target, item), { recursive: true });
   let data;
   try {
     data = JSON.parse(readFileSync(configFile, "utf8") || "{}");
   } catch {
-    return `copied to ${target} \u2014 add it to "plugins" manually`;
+    return remove ? "skipped (config unreadable)" : `copied to ${target} \u2014 add it to "plugins" manually`;
   }
   const plugins = data.plugins ??= [];
-  if (plugins.includes(target)) return "updated";
+  const listed = plugins.includes(target);
+  if (remove) {
+    rmSync(target, { recursive: true, force: true });
+    if (!listed) return "not installed";
+    data.plugins = plugins.filter((item) => item !== target);
+    copyFileSync(configFile, `${configFile}.bak`);
+    writeFileSync(configFile, JSON.stringify(data, null, 2) + "\n");
+    return "removed";
+  }
+  if (!existsSync(join(PKG_DIR, "tui.tsx"))) return "skipped (plugin sources not in this package)";
+  mkdirSync(target, { recursive: true });
+  for (const item of ["index.ts", "tui.tsx", "src"]) cpSync(join(PKG_DIR, item), join(target, item), { recursive: true });
+  if (listed) return "updated";
   plugins.push(target);
+  copyFileSync(configFile, `${configFile}.bak`);
   writeFileSync(configFile, JSON.stringify(data, null, 2) + "\n");
   return "installed";
 }
-function install() {
+function install(remove = false) {
   const found = clients.filter((c) => existsSync(c.detect));
   if (found.length === 0) console.log("No supported MCP clients detected.");
-  for (const c of found) console.log(`${c.name.padEnd(15)} ${c.run()}`);
-  if (found.length) console.log("\nRestart your client(s) to load `file-tree`.");
+  for (const c of found) console.log(`${c.name.padEnd(15)} ${c.run(remove)}`);
+  if (found.length) console.log(`
+Restart your client(s) to ${remove ? "unload" : "load"} \`file-tree\`.`);
 }
-var NAME, win, CMD, ARGS, home, PKG_DIR, stdio, appSupport, clients;
+var NAME, win, CMD, ARGS, home, PKG_DIR, stdio, appSupport, mcpServers, clients;
 var init_install = __esm({
   "src/install.ts"() {
     "use strict";
@@ -7267,56 +7283,55 @@ var init_install = __esm({
     home = homedir();
     PKG_DIR = dirname(fileURLToPath(import.meta.url));
     stdio = { command: CMD, args: ARGS };
-    appSupport = platform() === "darwin" ? join(home, "Library/Application Support") : platform() === "win32" ? process.env.APPDATA ?? join(home, "AppData/Roaming") : join(home, ".config");
+    appSupport = platform() === "darwin" ? join(home, "Library/Application Support") : win ? process.env.APPDATA ?? join(home, "AppData/Roaming") : join(home, ".config");
+    mcpServers = (file2) => (remove) => patchJson(file2, "mcpServers", stdio, remove);
     clients = [
       {
         name: "Claude Code",
         detect: join(home, ".claude"),
-        run() {
+        run(remove) {
+          const args = remove ? ["mcp", "remove", "--scope", "user", NAME] : ["mcp", "add", "--scope", "user", NAME, "--", CMD, ...ARGS];
           try {
-            execFileSync("claude", ["mcp", "add", "--scope", "user", NAME, "--", CMD, ...ARGS], { stdio: "pipe", shell: win });
-            return "installed";
+            execFileSync("claude", args, { stdio: "pipe", shell: win });
+            return remove ? "removed" : "installed";
           } catch (error62) {
-            return /already exists/i.test(String(error62.stderr)) ? "already installed" : "failed (is `claude` on PATH?)";
+            const stderr = String(error62.stderr);
+            if (/already exists/i.test(stderr)) return "already installed";
+            if (/no .*server found|not found/i.test(stderr)) return "not installed";
+            return "failed (is `claude` on PATH?)";
           }
         }
       },
-      {
-        name: "Claude Desktop",
-        detect: join(appSupport, "Claude"),
-        run: () => patchJson(join(appSupport, "Claude/claude_desktop_config.json"), "mcpServers", stdio)
-      },
-      { name: "Cursor", detect: join(home, ".cursor"), run: () => patchJson(join(home, ".cursor/mcp.json"), "mcpServers", stdio) },
-      {
-        name: "Windsurf",
-        detect: join(home, ".codeium/windsurf"),
-        run: () => patchJson(join(home, ".codeium/windsurf/mcp_config.json"), "mcpServers", stdio)
-      },
-      { name: "Gemini CLI", detect: join(home, ".gemini"), run: () => patchJson(join(home, ".gemini/settings.json"), "mcpServers", stdio) },
+      { name: "Claude Desktop", detect: join(appSupport, "Claude"), run: mcpServers(join(appSupport, "Claude/claude_desktop_config.json")) },
+      { name: "Cursor", detect: join(home, ".cursor"), run: mcpServers(join(home, ".cursor/mcp.json")) },
+      { name: "Windsurf", detect: join(home, ".codeium/windsurf"), run: mcpServers(join(home, ".codeium/windsurf/mcp_config.json")) },
+      { name: "Gemini CLI", detect: join(home, ".gemini"), run: mcpServers(join(home, ".gemini/settings.json")) },
       {
         name: "OpenCode",
         detect: join(home, ".config/opencode"),
-        run() {
+        run(remove) {
           const dir = join(home, ".config/opencode");
           const file2 = existsSync(join(dir, "opencode.json")) ? join(dir, "opencode.json") : join(dir, "opencode.jsonc");
-          return `sidebar plugin ${installPlugin(dir, file2)}`;
+          return `sidebar plugin ${patchPlugin(dir, file2, remove)}`;
         }
       },
       {
         name: "Codex",
         detect: join(home, ".codex"),
-        run() {
+        run(remove) {
           const file2 = join(home, ".codex/config.toml");
           const text = existsSync(file2) ? readFileSync(file2, "utf8") : "";
-          if (text.includes(`[mcp_servers.${NAME}]`)) return "already installed";
+          const header = `[mcp_servers.${NAME}]`;
+          const has = text.includes(header);
+          if (remove ? !has : has) return remove ? "not installed" : "already installed";
           if (text) copyFileSync(file2, `${file2}.bak`);
-          const block = `
-[mcp_servers.${NAME}]
+          const block = new RegExp(`\\n?\\[mcp_servers\\.${NAME}\\]\\n(?:[^\\[\\n].*\\n?)*`);
+          writeFileSync(file2, remove ? text.replace(block, "") : `${text}
+${header}
 command = "${CMD}"
 args = ${JSON.stringify(ARGS)}
-`;
-          writeFileSync(file2, text + block);
-          return "installed";
+`);
+          return remove ? "removed" : "installed";
         }
       }
     ];
@@ -36715,8 +36730,8 @@ var StdioServerTransport = class {
 
 // mcp.ts
 import { execFileSync as execFileSync2 } from "node:child_process";
-import { readdirSync } from "node:fs";
-import { resolve } from "node:path";
+import { readdirSync, readFileSync as readFileSync2, statSync } from "node:fs";
+import { relative, resolve } from "node:path";
 
 // src/lib/ignore.ts
 var DEFAULT_IGNORES = [
@@ -36773,9 +36788,9 @@ function isIgnored(relativePath, ignore) {
 }
 
 // mcp.ts
-if (process.argv[2] === "install") {
+if (process.argv[2] === "install" || process.argv[2] === "uninstall") {
   ;
-  (await Promise.resolve().then(() => (init_install(), install_exports))).install();
+  (await Promise.resolve().then(() => (init_install(), install_exports))).install(process.argv[2] === "uninstall");
   process.exit(0);
 }
 var ROOT = resolve(process.argv[2] ?? process.cwd());
@@ -36849,6 +36864,28 @@ function renderTree(root, maxDepth, maxRows, extraIgnore) {
   if (truncated) lines.push(`\u2026 truncated at ${maxRows} rows (raise maxRows or lower maxDepth)`);
   return [`${root}`, ...lines].join("\n");
 }
+function inRoot(path) {
+  const full = resolve(ROOT, path);
+  const rel = relative(ROOT, full);
+  if (rel.startsWith("..") || resolve(rel) === rel) throw new Error(`Path is outside the project: ${path}`);
+  return full;
+}
+function searchFiles(query, limit, extraIgnore) {
+  const ignore = createIgnore(extraIgnore);
+  const needle = query.toLowerCase();
+  const hits = [];
+  const walk = (rel) => {
+    for (const entry of readdirSync(resolve(ROOT, rel), { withFileTypes: true })) {
+      if (hits.length >= limit) return;
+      const path = rel ? `${rel}/${entry.name}` : entry.name;
+      if (isIgnored(path, ignore)) continue;
+      if (entry.isDirectory()) walk(path);
+      else if (path.toLowerCase().includes(needle)) hits.push(path);
+    }
+  };
+  walk("");
+  return hits;
+}
 var server = new McpServer({ name: "file-tree-mcp", version: "0.3.0" });
 server.registerTool(
   "file_tree",
@@ -36878,6 +36915,44 @@ server.registerTool(
     const text = rows.length ? `${rows.length} file(s) changed:
 ${rows.map(([p, c]) => `${c.status}  ${p}${stats(c)}`).join("\n")}` : "No uncommitted changes.";
     return { content: [{ type: "text", text }] };
+  }
+);
+server.registerTool(
+  "search_files",
+  {
+    description: "Find project files whose path contains the query (case-insensitive). Skips node_modules, .git and build output.",
+    inputSchema: {
+      query: external_exports.string().min(1).describe("Part of a file path, e.g. 'auth' or '.test.ts'."),
+      maxResults: external_exports.number().int().min(1).max(500).optional().describe("Default 50."),
+      ignore: external_exports.array(external_exports.string()).optional().describe("Extra path segments to skip.")
+    }
+  },
+  async ({ query, maxResults = 50, ignore = [] }) => {
+    const hits = searchFiles(query, maxResults, ignore);
+    return { content: [{ type: "text", text: hits.length ? hits.join("\n") : `No files match "${query}".` }] };
+  }
+);
+server.registerTool(
+  "read_file",
+  {
+    description: "Read a text file inside the project (max 200 KB). Optionally a 1-based inclusive line range.",
+    inputSchema: {
+      path: external_exports.string().describe("Path relative to the project root."),
+      startLine: external_exports.number().int().min(1).optional(),
+      endLine: external_exports.number().int().min(1).optional()
+    }
+  },
+  async ({ path, startLine, endLine }) => {
+    try {
+      const full = inRoot(path);
+      if (statSync(full).size > 200 * 1024) throw new Error("File is larger than 200 KB; use a smaller file.");
+      const text = readFileSync2(full, "utf8");
+      if (text.includes("\0")) throw new Error("Binary file.");
+      const out = startLine || endLine ? text.split("\n").slice((startLine ?? 1) - 1, endLine).join("\n") : text;
+      return { content: [{ type: "text", text: out }] };
+    } catch (error62) {
+      return { content: [{ type: "text", text: error62.message }], isError: true };
+    }
   }
 );
 await server.connect(new StdioServerTransport());

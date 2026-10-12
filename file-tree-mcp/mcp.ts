@@ -4,13 +4,13 @@
 import { McpServer } from "@modelcontextprotocol/sdk/server/mcp.js"
 import { StdioServerTransport } from "@modelcontextprotocol/sdk/server/stdio.js"
 import { execFileSync } from "node:child_process"
-import { readdirSync } from "node:fs"
-import { resolve } from "node:path"
+import { readdirSync, readFileSync, statSync } from "node:fs"
+import { relative, resolve } from "node:path"
 import { z } from "zod"
 import { createIgnore, isIgnored } from "./src/lib/ignore.ts"
 
-if (process.argv[2] === "install") {
-  ;(await import("./src/install.ts")).install()
+if (process.argv[2] === "install" || process.argv[2] === "uninstall") {
+  ;(await import("./src/install.ts")).install(process.argv[2] === "uninstall")
   process.exit(0)
 }
 
@@ -98,6 +98,31 @@ function renderTree(root: string, maxDepth: number, maxRows: number, extraIgnore
   return [`${root}`, ...lines].join("\n")
 }
 
+/** Resolve a user path inside the project root; refuse anything that escapes it. */
+function inRoot(path: string): string {
+  const full = resolve(ROOT, path)
+  const rel = relative(ROOT, full)
+  if (rel.startsWith("..") || resolve(rel) === rel) throw new Error(`Path is outside the project: ${path}`)
+  return full
+}
+
+function searchFiles(query: string, limit: number, extraIgnore: string[]): string[] {
+  const ignore = createIgnore(extraIgnore)
+  const needle = query.toLowerCase()
+  const hits: string[] = []
+  const walk = (rel: string): void => {
+    for (const entry of readdirSync(resolve(ROOT, rel), { withFileTypes: true })) {
+      if (hits.length >= limit) return
+      const path = rel ? `${rel}/${entry.name}` : entry.name
+      if (isIgnored(path, ignore)) continue
+      if (entry.isDirectory()) walk(path)
+      else if (path.toLowerCase().includes(needle)) hits.push(path)
+    }
+  }
+  walk("")
+  return hits
+}
+
 const server = new McpServer({ name: "file-tree-mcp", version: "0.3.0" })
 
 server.registerTool(
@@ -132,6 +157,46 @@ server.registerTool(
       ? `${rows.length} file(s) changed:\n${rows.map(([p, c]) => `${c.status}  ${p}${stats(c)}`).join("\n")}`
       : "No uncommitted changes."
     return { content: [{ type: "text", text }] }
+  },
+)
+
+server.registerTool(
+  "search_files",
+  {
+    description: "Find project files whose path contains the query (case-insensitive). Skips node_modules, .git and build output.",
+    inputSchema: {
+      query: z.string().min(1).describe("Part of a file path, e.g. 'auth' or '.test.ts'."),
+      maxResults: z.number().int().min(1).max(500).optional().describe("Default 50."),
+      ignore: z.array(z.string()).optional().describe("Extra path segments to skip."),
+    },
+  },
+  async ({ query, maxResults = 50, ignore = [] }) => {
+    const hits = searchFiles(query, maxResults, ignore)
+    return { content: [{ type: "text", text: hits.length ? hits.join("\n") : `No files match "${query}".` }] }
+  },
+)
+
+server.registerTool(
+  "read_file",
+  {
+    description: "Read a text file inside the project (max 200 KB). Optionally a 1-based inclusive line range.",
+    inputSchema: {
+      path: z.string().describe("Path relative to the project root."),
+      startLine: z.number().int().min(1).optional(),
+      endLine: z.number().int().min(1).optional(),
+    },
+  },
+  async ({ path, startLine, endLine }) => {
+    try {
+      const full = inRoot(path)
+      if (statSync(full).size > 200 * 1024) throw new Error("File is larger than 200 KB; use a smaller file.")
+      const text = readFileSync(full, "utf8")
+      if (text.includes("\0")) throw new Error("Binary file.")
+      const out = startLine || endLine ? text.split("\n").slice((startLine ?? 1) - 1, endLine).join("\n") : text
+      return { content: [{ type: "text", text: out }] }
+    } catch (error) {
+      return { content: [{ type: "text", text: (error as Error).message }], isError: true }
+    }
   },
 )
 
