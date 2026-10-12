@@ -19,6 +19,12 @@ if (process.argv[2] === "memory") {
     console.log(memory.status())
     process.exit(0)
   }
+  if (process.argv[3] === "watch") {
+    // Foreground capture without any AI client: edit files elsewhere and watch them get recorded.
+    memory.watchChanges(process.env.MEMORY_ROOT ?? (await import("./src/memory/store.ts")).memoryRoot(), (m) => console.log(m))
+    console.log(`watching ${(await import("./src/memory/store.ts")).memoryRoot()} — edit a file; Ctrl+C to stop`)
+    await new Promise(() => {})
+  }
   await memory.serve()
   await new Promise<void>((done) => process.stdin.on("close", done)) // run until the client disconnects
   process.exit(0)

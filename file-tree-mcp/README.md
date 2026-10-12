@@ -10,7 +10,7 @@ A file tree for AI coding agents, in two parts:
 `add` / `remove` / `list` / `catalog` (`src/mcpctl.ts`, check: `node src/mcpctl.test.ts`) add any MCP server to every client — see the [root README](../README.md).
 
 
-`env-doctor` is a third server (`... doctor`, `doctor --report` for humans; check: `node src/doctor/semver.test.ts`). `project-memory` is a second MCP server (`npx -y github:RandomKid24/adys-mcp memory`, registered by `install`) and a graph viewer (`... graph [port]`). See the [root README](../README.md). Unit check: `node src/memory/core.test.ts`.
+`env-doctor` is a third server (`... doctor`, `doctor --report` for humans; check: `node src/doctor/semver.test.ts`). `project-memory` is a second MCP server (`npx -y github:RandomKid24/adys-mcp memory`, registered by `install`) and a graph viewer (`... graph [port]`). See the [root README](../README.md). Unit check: `node src/memory/core.test.ts`. Debug: `... memory status` (what it sees) and `... memory watch` (foreground capture, no AI client needed).
 
 ## Install (MCP server)
 

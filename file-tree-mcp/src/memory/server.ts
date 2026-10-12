@@ -48,7 +48,7 @@ const INSTRUCTIONS =
  * Records files that change under `root` while the server runs onto today's session
  * node, so memory fills itself in every client with no hook and no model call.
  */
-function watchChanges(root: string): void {
+export function watchChanges(root: string, log?: (message: string) => void): void {
   const ignore = createIgnore([".memory"])
   const pending = new Set<string>()
   let timer: ReturnType<typeof setTimeout> | undefined
@@ -69,8 +69,9 @@ function watchChanges(root: string): void {
       const now = Date.now()
       recordSession(graph, new Date(now).toISOString().slice(0, 10), files, now, undefined, headSha(root))
       saveGraph(root, graph)
-    } catch {
-      // memory capture must never take the server down
+      log?.(`recorded ${files.length} file(s): ${files.slice(0, 5).join(", ")}${files.length > 5 ? ", …" : ""}`)
+    } catch (error) {
+      log?.(`could not save: ${(error as Error).message}`) // never take the server down over memory capture
     }
   }
 

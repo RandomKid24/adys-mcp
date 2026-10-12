@@ -38318,6 +38318,15 @@ var init_core3 = __esm({
 });
 
 // src/memory/store.ts
+var store_exports = {};
+__export(store_exports, {
+  graphPath: () => graphPath,
+  headSha: () => headSha,
+  loadGraph: () => loadGraph,
+  memoryRoot: () => memoryRoot,
+  saveGraph: () => saveGraph,
+  staleMap: () => staleMap
+});
 import { execFileSync as execFileSync3 } from "node:child_process";
 import { existsSync as existsSync3, mkdirSync as mkdirSync3, readFileSync as readFileSync3, writeFileSync as writeFileSync3 } from "node:fs";
 import { dirname as dirname3, join as join3 } from "node:path";
@@ -38379,7 +38388,8 @@ var server_exports = {};
 __export(server_exports, {
   VERSION: () => VERSION,
   serve: () => serve,
-  status: () => status
+  status: () => status,
+  watchChanges: () => watchChanges
 });
 import { existsSync as existsSync4, statSync, watch } from "node:fs";
 import { homedir as homedir2 } from "node:os";
@@ -38407,7 +38417,7 @@ function status() {
     `git               : ${headSha(root2) ? "repo, HEAD " + headSha(root2).slice(0, 7) : "no git repo here (stale checks off)"}`
   ].join("\n");
 }
-function watchChanges(root2) {
+function watchChanges(root2, log) {
   const ignore = createIgnore([".memory"]);
   const pending = /* @__PURE__ */ new Set();
   let timer;
@@ -38427,7 +38437,9 @@ function watchChanges(root2) {
       const now = Date.now();
       recordSession(graph, new Date(now).toISOString().slice(0, 10), files, now, void 0, headSha(root2));
       saveGraph(root2, graph);
-    } catch {
+      log?.(`recorded ${files.length} file(s): ${files.slice(0, 5).join(", ")}${files.length > 5 ? ", \u2026" : ""}`);
+    } catch (error62) {
+      log?.(`could not save: ${error62.message}`);
     }
   };
   try {
@@ -39110,6 +39122,12 @@ if (process.argv[2] === "memory") {
   if (process.argv[3] === "status") {
     console.log(memory.status());
     process.exit(0);
+  }
+  if (process.argv[3] === "watch") {
+    memory.watchChanges(process.env.MEMORY_ROOT ?? (await Promise.resolve().then(() => (init_store(), store_exports))).memoryRoot(), (m) => console.log(m));
+    console.log(`watching ${(await Promise.resolve().then(() => (init_store(), store_exports))).memoryRoot()} \u2014 edit a file; Ctrl+C to stop`);
+    await new Promise(() => {
+    });
   }
   await memory.serve();
   await new Promise((done) => process.stdin.on("close", done));
