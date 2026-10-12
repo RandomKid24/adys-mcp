@@ -74,6 +74,7 @@ my-project
 - **Deleted files** stay visible as red ghost rows (tracked from the workspace
   file watcher).
 - Edited-only mode when you only care about the diff surface.
+- **Click a file to open it in an editor dialog** — edit, `ctrl+s` to save, `esc` to close (text files up to 512 KB; saves through the OpenCode `file.write` API).
 - A fixed-height, scrollable sidebar (mouse wheel) — never takes over the screen.
 - A server-side tool, `filetree_edited_files`, namespaced under `filetree`.
 - Walks the project through the OpenCode `file.list` API — no `node:fs`, no

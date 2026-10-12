@@ -5,6 +5,7 @@ import { createEffect, createMemo, createResource, createSignal, For, onCleanup,
 import type { Store } from "solid-js/store"
 import type { ResolvedConfig, SettingsState, UiState } from "../lib/config.ts"
 import { collectEdited, type EditStatus, type EditedFile } from "../lib/edited.ts"
+import { Editor } from "./Editor.tsx"
 import { fetchSessionMessages } from "../lib/messages.ts"
 import { baseName } from "../lib/paths.ts"
 import { flattenEdited, flattenTree, marker, type Row } from "../lib/render.ts"
@@ -19,6 +20,8 @@ export interface FileTreeProps {
   focused?: boolean
   /** Toggle a directory's expanded state (persisted in the shared UI store). */
   onToggleDir?: (path: string, open: boolean) => void
+  /** Called after a file is saved from the editor, to refresh highlights. */
+  onSaved?: () => void
 }
 
 export function FileTree(props: FileTreeProps) {
@@ -134,11 +137,11 @@ export function FileTree(props: FileTreeProps) {
     return { additions, deletions, counted, files }
   }
 
-  /** Directories holding edits read brighter than empty ones. */
+  /** Folders in the accent hue (brighter when they hold edits), files in base text, edits by status. */
   const rowColor = (row: Row): RGBA => {
     if (row.edited) return statusColor(row.edited.status)
-    if (row.kind === "dir") return dirTotals(row.path).files > 0 ? theme.text.base : theme.text.muted
-    return theme.text.muted
+    if (row.kind === "dir") return dirTotals(row.path).files > 0 ? theme.hue.accent[400] : theme.hue.accent[600]
+    return theme.text.base
   }
 
   const statSpans = (additions: number, deletions: number) => (
@@ -150,8 +153,7 @@ export function FileTree(props: FileTreeProps) {
 
   const fileStats = (file?: EditedFile) => {
     if (!file) return null
-    if (file.counted) return statSpans(file.additions, file.deletions)
-    return <span style={{ fg: statusColor(file.status) }}>{`  ${marker(file)}`}</span>
+    return file.counted ? statSpans(file.additions, file.deletions) : null
   }
 
   const dirStats = (path: string) => {
@@ -164,18 +166,25 @@ export function FileTree(props: FileTreeProps) {
     props.onToggleDir?.(row.path, !row.open)
   }
 
+  const openFile = (row: Row): void => {
+    ctx.ui.dialog.set({ size: "xlarge" })
+    ctx.ui.dialog.show(() => (
+      <Editor path={row.path} location={location()} onSaved={() => props.onSaved?.()} />
+    ))
+  }
+
   const rows = () => (
     <For each={flat().rows}>
       {(row) => {
-        const clickable = (): boolean => row.kind === "dir" && row.expandable === true
+        const clickable = (): boolean => row.kind === "file" || row.expandable === true
         return (
           <box
             flexDirection="row"
-            backgroundColor={clickable() && hovered() === row.path ? theme.background.raised.base : undefined}
+            backgroundColor={clickable() && hovered() === row.path ? theme.background.raised.high : undefined}
             onMouseUp={
               clickable()
                 ? (event) => {
-                    if (event.button === 0) toggle(row)
+                    if (event.button === 0) (row.kind === "dir" ? toggle(row) : openFile(row))
                   }
                 : undefined
             }
@@ -185,11 +194,12 @@ export function FileTree(props: FileTreeProps) {
             }
           >
             <text wrapMode="none" fg={rowColor(row)}>
-              <span style={{ fg: theme.text.muted }}>{row.guide}</span>
+              <span style={{ fg: theme.border.base }}>{row.guide}</span>
               <Show when={row.kind === "dir"}>
-                <span style={{ fg: row.expandable ? theme.text.base : theme.text.muted }}>
-                  {row.expandable ? (row.open ? "- " : "+ ") : "  "}
-                </span>
+                <span style={{ fg: theme.hue.accent[500] }}>{row.expandable ? (row.open ? "▾ " : "▸ ") : "  "}</span>
+              </Show>
+              <Show when={row.kind === "file" && row.edited}>
+                <span style={{ fg: rowColor(row) }}>{`${marker(row.edited!)} `}</span>
               </Show>
               <span style={{ fg: rowColor(row) }}>{displayName(row)}</span>
               {row.kind === "dir" ? dirStats(row.path) : fileStats(row.edited)}
@@ -206,8 +216,11 @@ export function FileTree(props: FileTreeProps) {
   return (
     <box flexDirection="column">
       <text wrapMode="none" fg={theme.text.base}>
+        <span style={{ fg: theme.hue.accent[500] }}>{"◆ "}</span>
         <span style={{ fg: theme.text.base }}>{rootName()}</span>
-        <span style={{ fg: theme.text.muted }}>{`  ${edited().size} edited`}</span>
+        <Show when={edited().size > 0}>
+          <span style={{ fg: theme.text.feedback.warning.base }}>{`  ● ${edited().size}`}</span>
+        </Show>
       </text>
 
       <Show when={flat().rows.length > 0} fallback={<text wrapMode="none" fg={theme.text.muted}>{empty()}</text>}>

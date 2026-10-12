@@ -46,6 +46,7 @@ export default Plugin.define({
             ui={ui}
             settings={settings}
             onToggleDir={setDirOpen}
+            onSaved={() => bump("editTick")}
           />
         </Show>
       ),
