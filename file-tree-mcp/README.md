@@ -28,6 +28,10 @@ The project root is the client's cwd, or the first argument.
 claude mcp add file-tree -- npx -y github:RandomKid24/adys-mcp
 ```
 
+### Claude Code: free `/tree` pane
+
+The installer also adds the `file-tree-pane` mod (`../claude-code-mod`). `/tree` opens a pane with the project tree, git changes (`A`/`M`/`D`, `+N -M`) and click-to-fold folders. It renders in the terminal directly — **no model call, no tokens**. It rescans after edits. Manual install: `claude plugin marketplace add RandomKid24/adys-mcp && claude plugin install file-tree-pane@adys-mcp`. View-only (no editor); Claude Code's pane API doesn't offer one.
+
 ### Uninstall
 
 ```bash

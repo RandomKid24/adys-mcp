@@ -200,13 +200,4 @@ server.registerTool(
   },
 )
 
-// Prompts surface as slash commands in clients that support them (Claude Code: /mcp__file-tree__tree).
-const say = (text: string) => ({ messages: [{ role: "user" as const, content: { type: "text" as const, text } }] })
-server.registerPrompt("tree", { description: "Show the project file tree with changed files marked" }, () =>
-  say("Call the file_tree tool and show me the project tree, calling out files that changed."),
-)
-server.registerPrompt("changes", { description: "List files changed since the last commit" }, () =>
-  say("Call the edited_files tool and summarize what changed, per file."),
-)
-
 await server.connect(new StdioServerTransport())

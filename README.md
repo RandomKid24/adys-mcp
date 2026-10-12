@@ -35,6 +35,8 @@ npx -y github:RandomKid24/adys-mcp install
 
 Undo with `npx -y github:RandomKid24/adys-mcp uninstall`.
 
+**On Claude Code you also get a `/tree` pane** — a free file tree with git changes that draws in the terminal itself, so it costs **no tokens** (the MCP tools are called by the model and do). Open it with `/tree`.
+
 **On OpenCode it goes further:** a live sidebar that highlights files as the agent edits them. See the [package README](./file-tree-mcp/README.md).
 
 ## License

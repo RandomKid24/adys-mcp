@@ -1,0 +1,11 @@
+{
+  "name": "adys-mcp",
+  "owner": { "name": "Ady" },
+  "plugins": [
+    {
+      "name": "file-tree-pane",
+      "source": "./claude-code-mod",
+      "description": "Free (no tokens) file tree pane with git changes for Claude Code: /tree"
+    }
+  ]
+}

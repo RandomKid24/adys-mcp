@@ -7273,11 +7273,12 @@ function install(remove = false) {
   if (found.length) console.log(`
 Restart your client(s) to ${remove ? "unload" : "load"} \`file-tree\`.`);
 }
-var NAME, win, CMD, ARGS, home, PKG_DIR, stdio, appSupport, mcpServers, clients;
+var NAME, MOD, win, CMD, ARGS, home, PKG_DIR, stdio, appSupport, mcpServers, clients;
 var init_install = __esm({
   "src/install.ts"() {
     "use strict";
     NAME = "file-tree";
+    MOD = "file-tree-pane";
     win = platform() === "win32";
     [CMD, ...ARGS] = [...win ? ["cmd", "/c"] : [], "npx", "-y", "github:RandomKid24/adys-mcp"];
     home = homedir();
@@ -7290,16 +7291,26 @@ var init_install = __esm({
         name: "Claude Code",
         detect: join(home, ".claude"),
         run(remove) {
-          const args = remove ? ["mcp", "remove", "--scope", "user", NAME] : ["mcp", "add", "--scope", "user", NAME, "--", CMD, ...ARGS];
-          try {
-            execFileSync("claude", args, { stdio: "pipe", shell: win });
-            return remove ? "removed" : "installed";
-          } catch (error62) {
-            const stderr = String(error62.stderr);
-            if (/already exists/i.test(stderr)) return "already installed";
-            if (/no .*server found|not found/i.test(stderr)) return "not installed";
-            return "failed (is `claude` on PATH?)";
+          const claude = (...args) => {
+            try {
+              execFileSync("claude", args, { stdio: "pipe", shell: win });
+              return "";
+            } catch (error62) {
+              return String(error62.stderr || error62.message);
+            }
+          };
+          const outcome = (err, done) => !err ? done : /already (exists|installed)/i.test(err) ? "already installed" : /not found|no .*server found|not installed/i.test(err) ? "not installed" : "failed (is `claude` on PATH?)";
+          const mcp = outcome(
+            remove ? claude("mcp", "remove", "--scope", "user", NAME) : claude("mcp", "add", "--scope", "user", NAME, "--", CMD, ...ARGS),
+            remove ? "removed" : "installed"
+          );
+          let pane;
+          if (remove) pane = outcome(claude("plugin", "uninstall", `${MOD}@adys-mcp`), "removed");
+          else {
+            claude("plugin", "marketplace", "add", "RandomKid24/adys-mcp");
+            pane = outcome(claude("plugin", "install", `${MOD}@adys-mcp`), "installed");
           }
+          return `MCP tools ${mcp}; /tree pane ${pane}`;
         }
       },
       { name: "Claude Desktop", detect: join(appSupport, "Claude"), run: mcpServers(join(appSupport, "Claude/claude_desktop_config.json")) },
@@ -36960,16 +36971,5 @@ server.registerTool(
       return { content: [{ type: "text", text: error62.message }], isError: true };
     }
   }
-);
-var say = (text) => ({ messages: [{ role: "user", content: { type: "text", text } }] });
-server.registerPrompt(
-  "tree",
-  { description: "Show the project file tree with changed files marked" },
-  () => say("Call the file_tree tool and show me the project tree, calling out files that changed.")
-);
-server.registerPrompt(
-  "changes",
-  { description: "List files changed since the last commit" },
-  () => say("Call the edited_files tool and summarize what changed, per file.")
 );
 await server.connect(new StdioServerTransport());

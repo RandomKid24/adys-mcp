@@ -6,6 +6,7 @@ import { dirname, join } from "node:path"
 import { fileURLToPath } from "node:url"
 
 const NAME = "file-tree"
+const MOD = "file-tree-pane"
 const win = platform() === "win32"
 // Windows can't spawn `npx` directly (it's npx.cmd); route through cmd.
 const [CMD, ...ARGS] = [...(win ? ["cmd", "/c"] : []), "npx", "-y", "github:RandomKid24/adys-mcp"]
@@ -85,16 +86,28 @@ const clients: Client[] = [
     name: "Claude Code",
     detect: join(home, ".claude"),
     run(remove) {
-      const args = remove ? ["mcp", "remove", "--scope", "user", NAME] : ["mcp", "add", "--scope", "user", NAME, "--", CMD, ...ARGS]
-      try {
-        execFileSync("claude", args, { stdio: "pipe", shell: win })
-        return remove ? "removed" : "installed"
-      } catch (error) {
-        const stderr = String((error as any).stderr)
-        if (/already exists/i.test(stderr)) return "already installed"
-        if (/no .*server found|not found/i.test(stderr)) return "not installed"
-        return "failed (is `claude` on PATH?)"
+      const claude = (...args: string[]): string => {
+        try {
+          execFileSync("claude", args, { stdio: "pipe", shell: win })
+          return ""
+        } catch (error) {
+          return String((error as any).stderr || (error as Error).message)
+        }
       }
+      const outcome = (err: string, done: string): string =>
+        !err ? done : /already (exists|installed)/i.test(err) ? "already installed" : /not found|no .*server found|not installed/i.test(err) ? "not installed" : "failed (is `claude` on PATH?)"
+      const mcp = outcome(
+        remove ? claude("mcp", "remove", "--scope", "user", NAME) : claude("mcp", "add", "--scope", "user", NAME, "--", CMD, ...ARGS),
+        remove ? "removed" : "installed",
+      )
+      // The /tree pane draws in the terminal itself, so it costs no tokens (unlike the MCP tools).
+      let pane: string
+      if (remove) pane = outcome(claude("plugin", "uninstall", `${MOD}@adys-mcp`), "removed")
+      else {
+        claude("plugin", "marketplace", "add", "RandomKid24/adys-mcp")
+        pane = outcome(claude("plugin", "install", `${MOD}@adys-mcp`), "installed")
+      }
+      return `MCP tools ${mcp}; /tree pane ${pane}`
     },
   },
   { name: "Claude Desktop", detect: join(appSupport, "Claude"), run: mcpServers(join(appSupport, "Claude/claude_desktop_config.json")) },
