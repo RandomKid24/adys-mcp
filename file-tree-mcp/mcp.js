@@ -7305,6 +7305,12 @@ var init_install = __esm({
       { name: "Claude Desktop", detect: join(appSupport, "Claude"), run: mcpServers(join(appSupport, "Claude/claude_desktop_config.json")) },
       { name: "Cursor", detect: join(home, ".cursor"), run: mcpServers(join(home, ".cursor/mcp.json")) },
       { name: "Windsurf", detect: join(home, ".codeium/windsurf"), run: mcpServers(join(home, ".codeium/windsurf/mcp_config.json")) },
+      { name: "Kiro", detect: join(home, ".kiro"), run: mcpServers(join(home, ".kiro/settings/mcp.json")) },
+      {
+        name: "Antigravity",
+        detect: join(home, ".gemini/antigravity"),
+        run: mcpServers(join(home, ".gemini/antigravity/mcp_config.json"))
+      },
       { name: "Gemini CLI", detect: join(home, ".gemini"), run: mcpServers(join(home, ".gemini/settings.json")) },
       {
         name: "OpenCode",

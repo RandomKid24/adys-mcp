@@ -27,7 +27,7 @@ README.md         [D]  +0 -202
 | `search_files` | Find files by path.                                                          |
 | `read_file`    | Read a project text file, optionally a line range.                           |
 
-**One command, every client.** Detects Claude Code, Claude Desktop, Cursor, Windsurf, Gemini CLI, OpenCode and Codex, and registers itself in each:
+**One command, every client.** Detects Claude Code, Claude Desktop, Codex, Cursor, Windsurf, Kiro, Antigravity, Gemini CLI and OpenCode, and registers itself in each:
 
 ```bash
 npx -y github:RandomKid24/adys-mcp install
