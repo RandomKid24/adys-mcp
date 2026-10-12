@@ -9,6 +9,11 @@ import { resolve } from "node:path"
 import { z } from "zod"
 import { createIgnore, isIgnored } from "./src/lib/ignore.ts"
 
+if (process.argv[2] === "install") {
+  ;(await import("./src/install.ts")).install()
+  process.exit(0)
+}
+
 const ROOT = resolve(process.argv[2] ?? process.cwd())
 
 interface Change {

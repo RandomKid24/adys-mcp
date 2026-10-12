@@ -21,7 +21,7 @@
     "typecheck": "tsc --noEmit",
     "smoke": "node --experimental-strip-types scripts/smoke.ts",
     "mcp": "node mcp.ts",
-    "build": "esbuild mcp.ts --bundle --platform=node --format=esm --target=node18 --outfile=mcp.js --banner:js='import{createRequire as __cr}from\"module\";const require=__cr(import.meta.url);'"
+    "build": "npx -y esbuild mcp.ts --bundle --platform=node --format=esm --target=node18 --outfile=mcp.js --banner:js='import{createRequire as __cr}from\"module\";const require=__cr(import.meta.url);'"
   },
   "keywords": [
     "opencode",

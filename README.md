@@ -25,10 +25,10 @@ README.md         [D]  +0 -202
 | `file_tree`    | Bounded project tree, noise ignored, changed files tagged `[A]` `[M]` `[D]` with line counts. |
 | `edited_files` | Everything uncommitted in the repo, straight from git.                       |
 
-**Works everywhere** — Claude Code, Cursor, Claude Desktop, Codex, OpenCode… any MCP client:
+**One command, every client.** Detects Claude Code, Claude Desktop, Cursor, Windsurf, Gemini CLI, OpenCode and Codex, and registers itself in each:
 
 ```bash
-claude mcp add file-tree -- npx -y github:RandomKid24/adys-mcp
+npx -y github:RandomKid24/adys-mcp install
 ```
 
 **On OpenCode it goes further:** a live sidebar that highlights files as the agent edits them. See the [package README](./file-tree-mcp/README.md).

@@ -6,6 +6,14 @@ var __getOwnPropDesc = Object.getOwnPropertyDescriptor;
 var __getOwnPropNames = Object.getOwnPropertyNames;
 var __getProtoOf = Object.getPrototypeOf;
 var __hasOwnProp = Object.prototype.hasOwnProperty;
+var __esm = (fn, res, err) => function __init() {
+  if (err) throw err[0];
+  try {
+    return fn && (res = (0, fn[__getOwnPropNames(fn)[0]])(fn = 0)), res;
+  } catch (e) {
+    throw err = [e], e;
+  }
+};
 var __commonJS = (cb, mod) => function __require() {
   try {
     return mod || (0, cb[__getOwnPropNames(cb)[0]])((mod = { exports: {} }).exports, mod), mod.exports;
@@ -7197,6 +7205,102 @@ var require_dist = __commonJS({
     module.exports = exports = formatsPlugin;
     Object.defineProperty(exports, "__esModule", { value: true });
     exports.default = formatsPlugin;
+  }
+});
+
+// src/install.ts
+var install_exports = {};
+__export(install_exports, {
+  install: () => install
+});
+import { execFileSync } from "node:child_process";
+import { copyFileSync, existsSync, mkdirSync, readFileSync, writeFileSync } from "node:fs";
+import { homedir, platform } from "node:os";
+import { dirname, join } from "node:path";
+function patchJson(file2, keyPath, entry) {
+  let data = {};
+  if (existsSync(file2)) {
+    try {
+      data = JSON.parse(readFileSync(file2, "utf8") || "{}");
+    } catch {
+      return "skipped (config has comments/invalid JSON \u2014 add it manually)";
+    }
+    copyFileSync(file2, `${file2}.bak`);
+  } else mkdirSync(dirname(file2), { recursive: true });
+  const bucket = data[keyPath] ??= {};
+  if (bucket[NAME]) return "already installed";
+  bucket[NAME] = entry;
+  writeFileSync(file2, JSON.stringify(data, null, 2) + "\n");
+  return "installed";
+}
+function install() {
+  const found = clients.filter((c) => existsSync(c.detect));
+  if (found.length === 0) console.log("No supported MCP clients detected.");
+  for (const c of found) console.log(`${c.name.padEnd(15)} ${c.run()}`);
+  if (found.length) console.log("\nRestart your client(s) to load `file-tree`.");
+}
+var NAME, CMD, ARGS, home, stdio, appSupport, clients;
+var init_install = __esm({
+  "src/install.ts"() {
+    "use strict";
+    NAME = "file-tree";
+    CMD = "npx";
+    ARGS = ["-y", "github:RandomKid24/adys-mcp"];
+    home = homedir();
+    stdio = { command: CMD, args: ARGS };
+    appSupport = platform() === "darwin" ? join(home, "Library/Application Support") : platform() === "win32" ? process.env.APPDATA ?? join(home, "AppData/Roaming") : join(home, ".config");
+    clients = [
+      {
+        name: "Claude Code",
+        detect: join(home, ".claude"),
+        run() {
+          try {
+            execFileSync("claude", ["mcp", "add", "--scope", "user", NAME, "--", CMD, ...ARGS], { stdio: "pipe" });
+            return "installed";
+          } catch (error62) {
+            return /already exists/i.test(String(error62.stderr)) ? "already installed" : "failed (is `claude` on PATH?)";
+          }
+        }
+      },
+      {
+        name: "Claude Desktop",
+        detect: join(appSupport, "Claude"),
+        run: () => patchJson(join(appSupport, "Claude/claude_desktop_config.json"), "mcpServers", stdio)
+      },
+      { name: "Cursor", detect: join(home, ".cursor"), run: () => patchJson(join(home, ".cursor/mcp.json"), "mcpServers", stdio) },
+      {
+        name: "Windsurf",
+        detect: join(home, ".codeium/windsurf"),
+        run: () => patchJson(join(home, ".codeium/windsurf/mcp_config.json"), "mcpServers", stdio)
+      },
+      { name: "Gemini CLI", detect: join(home, ".gemini"), run: () => patchJson(join(home, ".gemini/settings.json"), "mcpServers", stdio) },
+      {
+        name: "OpenCode",
+        detect: join(home, ".config/opencode"),
+        run() {
+          const dir = join(home, ".config/opencode");
+          const file2 = existsSync(join(dir, "opencode.json")) ? join(dir, "opencode.json") : join(dir, "opencode.jsonc");
+          return patchJson(file2, "mcp", { type: "local", command: [CMD, ...ARGS], enabled: true });
+        }
+      },
+      {
+        name: "Codex",
+        detect: join(home, ".codex"),
+        run() {
+          const file2 = join(home, ".codex/config.toml");
+          const text = existsSync(file2) ? readFileSync(file2, "utf8") : "";
+          if (text.includes(`[mcp_servers.${NAME}]`)) return "already installed";
+          if (text) copyFileSync(file2, `${file2}.bak`);
+          const block = `
+[mcp_servers.${NAME}]
+command = "${CMD}"
+args = ${JSON.stringify(ARGS)}
+`;
+          writeFileSync(file2, text + block);
+          return "installed";
+        }
+      }
+    ];
   }
 });
 
@@ -36591,7 +36695,7 @@ var StdioServerTransport = class {
 };
 
 // mcp.ts
-import { execFileSync } from "node:child_process";
+import { execFileSync as execFileSync2 } from "node:child_process";
 import { readdirSync } from "node:fs";
 import { resolve } from "node:path";
 
@@ -36650,9 +36754,14 @@ function isIgnored(relativePath, ignore) {
 }
 
 // mcp.ts
+if (process.argv[2] === "install") {
+  ;
+  (await Promise.resolve().then(() => (init_install(), install_exports))).install();
+  process.exit(0);
+}
 var ROOT = resolve(process.argv[2] ?? process.cwd());
 function gitChanges(root) {
-  const git = (...args) => execFileSync("git", ["-c", "core.quotepath=off", "-C", root, ...args], {
+  const git = (...args) => execFileSync2("git", ["-c", "core.quotepath=off", "-C", root, ...args], {
     encoding: "utf8",
     maxBuffer: 64 << 20,
     stdio: ["ignore", "pipe", "pipe"]
