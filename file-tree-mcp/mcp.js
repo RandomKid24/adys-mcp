@@ -37923,7 +37923,7 @@ function jsonClient(id, name, detect, file2, key = "mcpServers", shape) {
 }
 function claude(...args) {
   try {
-    return { ok: true, out: execFileSync("claude", args, { encoding: "utf8", stdio: ["ignore", "pipe", "pipe"], shell: win }) };
+    return { ok: true, out: execFileSync("claude", args, { encoding: "utf8", stdio: ["ignore", "pipe", "pipe"], shell: win, windowsHide: true }) };
   } catch (error62) {
     return { ok: false, out: String(error62.stderr || error62.message) };
   }
@@ -38072,7 +38072,7 @@ function patchPlugin(configFile, remove) {
 function claudePane(remove) {
   const run2 = (...args) => {
     try {
-      execFileSync2("claude", args, { stdio: "pipe", shell: win });
+      execFileSync2("claude", args, { stdio: "pipe", shell: win, windowsHide: true });
       return "";
     } catch (error62) {
       return String(error62.stderr || error62.message);
@@ -38329,7 +38329,7 @@ function memoryRoot() {
     if (dirname3(dir) === dir) break;
   }
   try {
-    return execFileSync3("git", ["-C", start, "rev-parse", "--show-toplevel"], { encoding: "utf8", stdio: ["ignore", "pipe", "ignore"] }).trim() || start;
+    return execFileSync3("git", ["-C", start, "rev-parse", "--show-toplevel"], { encoding: "utf8", stdio: ["ignore", "pipe", "ignore"], windowsHide: true }).trim() || start;
   } catch {
     return start;
   }
@@ -38348,7 +38348,7 @@ function saveGraph(root2, graph) {
 }
 function git(root2, ...args) {
   try {
-    return execFileSync3("git", ["-C", root2, ...args], { encoding: "utf8", stdio: ["ignore", "pipe", "ignore"] }).trim();
+    return execFileSync3("git", ["-C", root2, ...args], { encoding: "utf8", stdio: ["ignore", "pipe", "ignore"], windowsHide: true }).trim();
   } catch {
     return void 0;
   }
@@ -38592,7 +38592,7 @@ import { join as join5 } from "node:path";
 import { promisify } from "node:util";
 async function out(cmd, args, timeout = 4e3) {
   try {
-    const r = await run(cmd, args, { timeout });
+    const r = await run(cmd, args, { timeout, windowsHide: true });
     return `${r.stdout}${r.stderr}`.trim();
   } catch {
     return void 0;
@@ -38998,7 +38998,7 @@ async function viewGraph(port = 4747) {
   console.log(`project memory graph \u2192 ${url2}  (Ctrl+C to stop)
 reading ${graphPath(root2)}`);
   const opener = platform2() === "darwin" ? "open" : platform2() === "win32" ? "cmd" : "xdg-open";
-  execFile2(opener, platform2() === "win32" ? ["/c", "start", "", url2] : [url2], () => {
+  execFile2(opener, platform2() === "win32" ? ["/c", "start", "", url2] : [url2], { windowsHide: true }, () => {
   });
 }
 var PAGE;
@@ -39098,7 +39098,9 @@ function gitChanges(root2) {
   const git2 = (...args) => execFileSync4("git", ["-c", "core.quotepath=off", "-C", root2, ...args], {
     encoding: "utf8",
     maxBuffer: 64 << 20,
-    stdio: ["ignore", "pipe", "pipe"]
+    stdio: ["ignore", "pipe", "pipe"],
+    windowsHide: true
+    // no console window per git call on Windows
   });
   const changes = /* @__PURE__ */ new Map();
   try {

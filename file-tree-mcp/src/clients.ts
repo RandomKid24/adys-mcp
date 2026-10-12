@@ -90,7 +90,7 @@ function jsonClient(id: string, name: string, detect: string, file: string, key 
 
 function claude(...args: string[]): { ok: boolean; out: string } {
   try {
-    return { ok: true, out: execFileSync("claude", args, { encoding: "utf8", stdio: ["ignore", "pipe", "pipe"], shell: win }) }
+    return { ok: true, out: execFileSync("claude", args, { encoding: "utf8", stdio: ["ignore", "pipe", "pipe"], shell: win, windowsHide: true }) }
   } catch (error) {
     return { ok: false, out: String((error as any).stderr || (error as Error).message) }
   }

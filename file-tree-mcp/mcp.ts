@@ -52,6 +52,7 @@ function gitChanges(root: string): Map<string, Change> | string {
       encoding: "utf8",
       maxBuffer: 64 << 20,
       stdio: ["ignore", "pipe", "pipe"],
+      windowsHide: true, // no console window per git call on Windows
     })
   const changes = new Map<string, Change>()
   try {

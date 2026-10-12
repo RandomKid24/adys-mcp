@@ -49,7 +49,7 @@ function patchPlugin(configFile: string, remove: boolean): string {
 function claudePane(remove: boolean): string {
   const run = (...args: string[]): string => {
     try {
-      execFileSync("claude", args, { stdio: "pipe", shell: win })
+      execFileSync("claude", args, { stdio: "pipe", shell: win, windowsHide: true })
       return ""
     } catch (error) {
       return String((error as any).stderr || (error as Error).message)

@@ -16,7 +16,7 @@ export function memoryRoot(): string {
     if (dirname(dir) === dir) break
   }
   try {
-    return execFileSync("git", ["-C", start, "rev-parse", "--show-toplevel"], { encoding: "utf8", stdio: ["ignore", "pipe", "ignore"] }).trim() || start
+    return execFileSync("git", ["-C", start, "rev-parse", "--show-toplevel"], { encoding: "utf8", stdio: ["ignore", "pipe", "ignore"], windowsHide: true }).trim() || start
   } catch {
     return start
   }
@@ -39,7 +39,7 @@ export function saveGraph(root: string, graph: Graph): void {
 
 function git(root: string, ...args: string[]): string | undefined {
   try {
-    return execFileSync("git", ["-C", root, ...args], { encoding: "utf8", stdio: ["ignore", "pipe", "ignore"] }).trim()
+    return execFileSync("git", ["-C", root, ...args], { encoding: "utf8", stdio: ["ignore", "pipe", "ignore"], windowsHide: true }).trim()
   } catch {
     return undefined
   }

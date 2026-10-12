@@ -27,7 +27,7 @@ const read = (path: string): string | undefined => {
 /** Run a fixed command (never via a shell) and return trimmed output, or undefined when it is missing/fails. */
 async function out(cmd: string, args: string[], timeout = 4000): Promise<string | undefined> {
   try {
-    const r = await run(cmd, args, { timeout })
+    const r = await run(cmd, args, { timeout, windowsHide: true })
     return `${r.stdout}${r.stderr}`.trim()
   } catch {
     return undefined

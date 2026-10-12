@@ -73,5 +73,5 @@ export async function viewGraph(port = 4747): Promise<void> {
   const url = `http://127.0.0.1:${port}`
   console.log(`project memory graph → ${url}  (Ctrl+C to stop)\nreading ${graphPath(root)}`)
   const opener = platform() === "darwin" ? "open" : platform() === "win32" ? "cmd" : "xdg-open"
-  execFile(opener, platform() === "win32" ? ["/c", "start", "", url] : [url], () => {})
+  execFile(opener, platform() === "win32" ? ["/c", "start", "", url] : [url], { windowsHide: true }, () => {})
 }
